@@ -34,7 +34,8 @@ Item {
             spacing: Math.round(5 * UIScale.value)
 
             Text {
-                text: "󱡏"
+                text: "headset"
+                font.family: "Material Symbols Rounded"
                 font.pixelSize: Math.round(14 * UIScale.value)
                 color: Colors.accent
             }
@@ -203,7 +204,8 @@ Item {
                     spacing: UIScale.spacingSm
 
                     Text {
-                        text: "󰋋"
+                        text: "headset"
+                        font.family: "Material Symbols Rounded"
                         font.pixelSize: Math.round(22 * UIScale.value)
                         color: Colors.accent
                     }
@@ -304,7 +306,16 @@ Item {
             }
 
             Text {
-                text: parent.parent.charging ? "󱐋 " + parent.parent.level + "%" : parent.parent.level + "%"
+                visible: parent.parent.charging
+                text: "flash_on"
+                font.family: "Material Symbols Rounded"
+                font.pixelSize: UIScale.fontTiny
+                color: Colors.accent
+                Layout.rightMargin: Math.round(2 * UIScale.value)
+            }
+
+            Text {
+                text: parent.parent.level + "%"
                 color: parent.parent.charging ? Colors.accent : Colors.text
                 font.pixelSize: UIScale.fontTiny
                 font.weight: Font.DemiBold

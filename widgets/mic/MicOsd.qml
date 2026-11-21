@@ -7,6 +7,6 @@ VolumeStyleOsd {
     audioTarget: MicService.source?.audio
     mutedTextKey: "mic.muted"
     iconFor: function (v, m) {
-        return m || v === 0 ? "󰍭" : "󰍬";
+        return m || v === 0 ? "mic_off" : "mic";
     }
 }

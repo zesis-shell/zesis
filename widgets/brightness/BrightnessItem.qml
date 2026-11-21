@@ -6,14 +6,7 @@ import "../shared"
 BarButton {
     id: root
     readonly property bool available: BrightnessService.available
-    icon: {
-        var p = BrightnessService.percent;
-        if (p >= 80)
-            return "󰃠";
-        if (p >= 40)
-            return "󰃟";
-        return "󰃞";
-    }
+    icon: BrightnessService.icon
     active: popup.visible
     visible: available
     onClicked: popup.visible ? popup.close() : popup.open()

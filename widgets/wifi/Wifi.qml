@@ -27,6 +27,7 @@ Item {
 
                 Text {
                     text: WifiService.barIcon()
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: Math.round(20 * UIScale.value)
                     color: (WifiService.connected || WifiService.onEthernet) ? Colors.accent : Colors.textDim
                     Behavior on color {
@@ -73,7 +74,8 @@ Item {
                 spacing: UIScale.spacingSm
 
                 Text {
-                    text: "󰈀"
+                    text: "wifi"
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: Math.round(22 * UIScale.value)
                     color: Colors.accent
                 }
@@ -118,6 +120,8 @@ Item {
 
                 Text {
                     text: WifiService.signalIcon(WifiService.signalStrength)
+                    opacity: WifiService.signalOpacity(WifiService.signalStrength)
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: Math.round(22 * UIScale.value)
                     color: Colors.accent
                 }
@@ -256,6 +260,8 @@ Item {
 
                                 Text {
                                     text: WifiService.signalIcon(netRow.modelData.signalStrength)
+                                    opacity: WifiService.signalOpacity(netRow.modelData.signalStrength)
+                                    font.family: "Material Symbols Rounded"
                                     font.pixelSize: Math.round(18 * UIScale.value)
                                     color: netRow.isConnected ? Colors.accent : Colors.textDim
                                     Behavior on color {
@@ -284,7 +290,8 @@ Item {
 
                                 Text {
                                     visible: WifiService.needsPsk(netRow.modelData) && !netRow.modelData.known
-                                    text: "󰌾"
+                                    text: "lock"
+                                    font.family: "Material Symbols Rounded"
                                     font.pixelSize: Math.round(11 * UIScale.value)
                                     color: Colors.muted
                                 }
@@ -334,7 +341,8 @@ Item {
 
                                 Text {
                                     visible: netRow.isChanging
-                                    text: "󰑓"
+                                    text: "refresh"
+                                    font.family: "Material Symbols Rounded"
                                     font.pixelSize: Math.round(14 * UIScale.value)
                                     color: Colors.accent
                                     RotationAnimator on rotation {

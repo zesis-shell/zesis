@@ -40,14 +40,26 @@ Column {
             }
         }
 
-        Text {
-            text: (battBar.charging ? "󱐋 " : "") + battBar.level + "%"
-            color: battBar.charging ? Colors.accent : Colors.text
-            font.pixelSize: UIScale.fontTiny
-            font.weight: Font.DemiBold
-            Behavior on color {
-                ColorAnimation {
-                    duration: Anim.fast
+        Row {
+            spacing: Math.round(2 * UIScale.value)
+
+            Text {
+                visible: battBar.charging
+                text: "bolt"
+                color: Colors.accent
+                font.family: "Material Symbols Rounded"
+                font.pixelSize: UIScale.fontTiny
+            }
+
+            Text {
+                text: battBar.level + "%"
+                color: battBar.charging ? Colors.accent : Colors.text
+                font.pixelSize: UIScale.fontTiny
+                font.weight: Font.DemiBold
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Anim.fast
+                    }
                 }
             }
         }

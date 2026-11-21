@@ -37,6 +37,7 @@ Item {
         Text {
             anchors.centerIn: parent
             text: root.icon
+            font.family: "Material Symbols Rounded"
             font.pixelSize: Math.round(30 * UIScale.value)
             color: root.armed ? Colors.error : Colors.text
             Behavior on color {

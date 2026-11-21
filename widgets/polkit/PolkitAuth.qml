@@ -67,7 +67,7 @@ Item {
                     spacing: UIScale.spacingSm
                     Text {
                         text: ""
-                        font.family: "Material Icons"
+                        font.family: "Material Symbols Rounded"
                         font.pixelSize: Math.round(18 * UIScale.value)
                         color: Colors.accent
                     }

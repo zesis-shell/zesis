@@ -7,6 +7,8 @@ import Quickshell.Io
 Singleton {
     id: root
 
+    readonly property string identityIcon: "grid_on"
+
     readonly property string _configDir: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/zesis"
     readonly property string _configPath: _configDir + "/workspaceindicator.json"
 

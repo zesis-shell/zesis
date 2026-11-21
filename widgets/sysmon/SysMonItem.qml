@@ -10,6 +10,11 @@ Item {
 
     readonly property bool active: popup.visible
 
+    // The atom needs CPU data while it exists on the bar. The service
+    // singleton outlives this item, so report presence explicitly.
+    Component.onCompleted: SysMonService.barAtomActive = true
+    Component.onDestruction: SysMonService.barAtomActive = false
+
     MouseArea {
         id: mouseArea
         anchors.fill: parent
@@ -20,7 +25,8 @@ Item {
 
     Text {
         anchors.centerIn: parent
-        text: "󰍛"
+        text: "memory"
+        font.family: "Material Symbols Rounded"
         font.pixelSize: 20
         color: (mouseArea.containsMouse || sysinfo.active) ? Colors.accent : Colors.text
         Behavior on color {

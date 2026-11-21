@@ -101,6 +101,7 @@ ColumnLayout {
                             Text {
                                 anchors.centerIn: parent
                                 text: appGroup.groupAllMuted ? root.mutedGlyph : root.unmutedGlyph
+                                font.family: "Material Symbols Rounded"
                                 font.pixelSize: Math.round(16 * UIScale.value)
                                 color: appGroup.groupAllMuted ? Colors.muted : Colors.accent
                                 Behavior on color {

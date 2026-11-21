@@ -66,16 +66,15 @@ in {
       default = true;
       description = ''
         Point the zesis service's fontconfig at the fonts its widgets
-        render with (a Nerd Font symbol set for the bar/widget glyph
-        icons) via `FONTCONFIG_FILE`.
+        render with (the Material Symbols Rounded ligature font) via `FONTCONFIG_FILE`.
       '';
     };
     packages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
-      default = [pkgs.nerd-fonts.symbols-only];
+      default = [pkgs.material-symbols];
       description = ''
-        Font packages visible to zesis service. Default is Nerd Font symbol
-        glyphs.
+        Font packages visible to zesis service. Default is the Material
+        Symbols font (Rounded variant used by the widgets).
       '';
     };
   };

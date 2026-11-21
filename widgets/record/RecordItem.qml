@@ -27,7 +27,9 @@ Item {
     Text {
         id: icon
         anchors.centerIn: parent
-        text: RecordService.recording ? "󰑈" : "󰻃"
+        // Same glyph as the catalog entry; recording is shown by colour and pulse.
+        text: "fiber_manual_record"
+        font.family: "Material Symbols Rounded"
         font.pixelSize: Math.round(15 * UIScale.value)
         color: RecordService.recording ? "#e05555" : (ma.containsMouse || popup.visible ? Colors.accent : Colors.text)
         Behavior on color {

@@ -270,7 +270,7 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         text: ""
-                        font.family: "Material Icons"
+                        font.family: "Material Symbols Rounded"
                         font.pixelSize: Math.round(16 * UIScale.value)
                         color: NetworkService.scanning ? Colors.muted : (scanMa.containsMouse ? Colors.accent : Colors.textDim)
                         rotation: NetworkService.scanning ? 360 : 0

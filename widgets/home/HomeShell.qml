@@ -24,27 +24,27 @@ IndexedPanelShell {
         var base = [
             {
                 id: "home",
-                icon: "",
+                icon: "home",
                 label: I18n.t("home.navHome"),
                 component: dashboardComp
             },
             {
                 id: "community",
-                icon: "",
+                icon: "language",
                 label: I18n.t("home.navCommunity"),
                 component: communityPanelComp,
                 files: ["community/CommunityPanel.qml"]
             },
             {
                 id: "network",
-                icon: "",
+                icon: "wifi",
                 label: I18n.t("home.navNetwork"),
                 component: networkPanelComp,
                 files: ["network/NetworkPanel.qml"]
             },
             {
                 id: "sysmon",
-                icon: "",
+                icon: "developer_board",
                 label: I18n.t("home.navSysMon"),
                 component: sysMonPanelComp,
                 files: ["sysmon/SysMonPanel.qml"]
@@ -53,21 +53,21 @@ IndexedPanelShell {
         if (NixPurityService.isNixOS)
             base.push({
                 id: "nixpurity",
-                icon: "󱄅",
+                icon: "ac_unit",
                 label: I18n.t("home.navNixPurity"),
                 component: nixPurityComp,
                 files: ["nixpurity/NixPurity.qml"]
             });
         base.push({
             id: "notifs",
-            icon: "",
+            icon: "notifications",
             label: I18n.t("home.navNotifications"),
             component: notifHistComp,
             files: ["notifications/NotifHistory.qml"]
         });
         base.push({
             id: "calendar",
-            icon: "󰺻",
+            icon: "calendar_month",
             label: I18n.t("home.navCalendar"),
             component: calendarPanelComp,
             files: ["calendar/CalendarPanel.qml"]
@@ -75,13 +75,13 @@ IndexedPanelShell {
         if (root._devMode) {
             base.push({
                 id: "responsivetest",
-                icon: "󰙨",
+                icon: "science",
                 label: I18n.t("home.navResponsiveTest"),
                 component: responsiveTestComp
             });
             base.push({
                 id: "assemblytest",
-                icon: "󰙨",
+                icon: "science",
                 label: I18n.t("home.navAssemblyTest"),
                 component: assemblyTestComp
             });

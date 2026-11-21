@@ -88,8 +88,8 @@ Item {
 
             Text {
                 anchors.centerIn: parent
-                text: ""
-                font.family: "Material Icons"
+                text: "settings"
+                font.family: "Material Symbols Rounded"
                 font.pixelSize: Math.round(16 * UIScale.value)
                 color: settingsRect.active ? Colors.accent : Colors.textDim
                 Behavior on color {

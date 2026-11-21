@@ -3,6 +3,26 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import "../../"
+import "../keybinds"
+import "../gitupdate"
+import "../lockscreen"
+import "../home"
+import "../settings"
+import "../battery"
+import "../brightness"
+import "../sound"
+import "../mic"
+import "../bluetooth"
+import "../wifi"
+import "../weather"
+import "../notifications"
+import "../airpods"
+import "../record"
+import "../sysmon"
+import "../taskbar"
+import "../themecycler"
+import "../clock"
+import "../workspaceindicator/disc"
 
 Singleton {
     id: root
@@ -11,120 +31,235 @@ Singleton {
         {
             id: "workspace",
             label: I18n.t("bar.itemWorkspace"),
+            desc: I18n.t("bar.descWorkspace"),
+            icon: WorkspaceDiscService.identityIcon,
+            category: "core",
             src: "../workspaceindicator/WorkspaceIndicator.qml"
         },
         {
             id: "systray",
             label: I18n.t("bar.itemSystray"),
+            desc: I18n.t("bar.descSystray"),
+            icon: "dashboard",
+            category: "core",
             src: "SystrayItems.qml"
         },
         {
             id: "taskbar",
             label: I18n.t("bar.itemTaskbar"),
+            desc: I18n.t("bar.descTaskbar"),
+            icon: TaskbarService.identityIcon,
+            category: "core",
             src: "../taskbar/Taskbar.qml"
         },
         {
             id: "music",
             label: I18n.t("bar.itemMusic"),
+            desc: I18n.t("bar.descMusic"),
+            icon: "music_note",
+            category: "media",
             src: "../music/MusicChip.qml"
         },
         // The repaint of this widget causes 0.6% hits on the CPU in regular intervals
         {
             id: "sysmon",
             label: I18n.t("bar.itemSysmon"),
+            desc: I18n.t("bar.descSysmon"),
+            icon: SysMonService.identityIcon,
+            category: "info",
             src: "../sysmon/SysMonItem.qml"
         },
         {
             id: "theme",
             label: I18n.t("bar.itemTheme"),
+            desc: I18n.t("bar.descTheme"),
+            icon: ThemeCyclerService.identityIcon,
+            category: "utilities",
             src: "../themeswitcher/ThemeSwitcherItem.qml"
         },
         {
             id: "keybinds",
             label: I18n.t("bar.itemKeybinds"),
+            desc: I18n.t("bar.descKeybinds"),
+            icon: KeybindService.identityIcon,
+            category: "utilities",
             src: "../keybinds/KeybindsItem.qml"
         },
         {
             id: "bluetooth",
             label: I18n.t("bar.itemBluetooth"),
+            desc: I18n.t("bar.descBluetooth"),
+            icon: BluetoothService.identityIcon,
+            category: "system",
             src: "../bluetooth/BluetoothItem.qml"
         },
         {
             id: "airpods",
             label: I18n.t("bar.itemAirpods"),
+            desc: I18n.t("bar.descAirpods"),
+            icon: AirPodsService.identityIcon,
+            category: "system",
             src: "../airpods/AirPods.qml"
         },
         {
             id: "wifi",
             label: I18n.t("bar.itemWifi"),
+            desc: I18n.t("bar.descWifi"),
+            icon: WifiService.identityIcon,
+            category: "system",
             src: "../wifi/WifiItem.qml"
         },
         {
             id: "weather",
             label: I18n.t("bar.itemWeather"),
+            desc: I18n.t("bar.descWeather"),
+            icon: WeatherService.identityIcon,
+            category: "info",
             src: "../weather/WeatherItem.qml"
         },
         {
             id: "brightness",
             label: I18n.t("bar.itemBrightness"),
+            desc: I18n.t("bar.descBrightness"),
+            icon: BrightnessService.identityIcon,
+            category: "system",
             src: "../brightness/BrightnessItem.qml"
         },
         {
             id: "sound",
             label: I18n.t("bar.itemSound"),
+            desc: I18n.t("bar.descSound"),
+            icon: AudioService.identityIcon,
+            category: "system",
             src: "../sound/SoundItem.qml"
         },
         {
             id: "mic",
             label: I18n.t("bar.itemMic"),
+            desc: I18n.t("bar.descMic"),
+            icon: MicService.identityIcon,
+            category: "media",
             src: "../mic/MicItem.qml"
         },
         {
             id: "notifications",
             label: I18n.t("bar.itemNotifications"),
+            desc: I18n.t("bar.descNotifications"),
+            icon: NotifServer.identityIcon,
+            category: "media",
             src: "../notifications/NotificationsItem.qml"
         },
         {
             id: "config",
             label: I18n.t("bar.itemConfig"),
+            desc: I18n.t("bar.descConfig"),
+            icon: "tune",
+            category: "utilities",
             src: "../config/ConfigItem.qml"
         },
         {
             id: "battery",
             label: I18n.t("bar.itemBattery"),
+            desc: I18n.t("bar.descBattery"),
+            icon: BatteryService.identityIcon,
+            category: "system",
             src: "../battery/BatteryItem.qml"
         },
         {
             id: "record",
             label: I18n.t("bar.itemRecord"),
+            desc: I18n.t("bar.descRecord"),
+            icon: RecordService.identityIcon,
+            category: "media",
             src: "../record/RecordItem.qml"
         },
         {
             id: "gitupdate",
             label: I18n.t("bar.itemGitupdate"),
+            desc: I18n.t("bar.descGitupdate"),
+            icon: GitUpdateService.identityIcon,
+            category: "info",
             src: "../gitupdate/GitUpdateItem.qml"
         },
         {
             id: "home",
             label: I18n.t("bar.itemHome"),
+            desc: I18n.t("bar.descHome"),
+            icon: HomeWindowService.identityIcon,
+            category: "utilities",
             src: "../home/HomeBarButton.qml"
         },
         {
             id: "settings",
             label: I18n.t("bar.itemSettings"),
+            desc: I18n.t("bar.descSettings"),
+            icon: SettingsWindowService.identityIcon,
+            category: "utilities",
             src: "../settings/SettingsBarButton.qml"
         },
         {
             id: "lock",
             label: I18n.t("bar.itemLock"),
+            desc: I18n.t("bar.descLock"),
+            icon: LockService.identityIcon,
+            category: "utilities",
             src: "../lockscreen/LockBarButton.qml"
         },
         {
             id: "clock",
             label: I18n.t("bar.itemClock"),
+            desc: I18n.t("bar.descClock"),
+            icon: ClockSettings.identityIcon,
+            category: "info",
             src: "../clock/ClockItem.qml"
         },
     ]
+
+    // Ordered, switching these around also does so visually.
+    readonly property var categories: [
+        {
+            id: "core",
+            label: I18n.t("bar.categoryCore"),
+            desc: I18n.t("bar.categoryCoreDesc"),
+            icon: "widgets"
+        },
+        {
+            id: "media",
+            label: I18n.t("bar.categoryMedia"),
+            desc: I18n.t("bar.categoryMediaDesc"),
+            icon: "graphic_eq"
+        },
+        {
+            id: "info",
+            label: I18n.t("bar.categoryInfo"),
+            desc: I18n.t("bar.categoryInfoDesc"),
+            icon: "insights"
+        },
+        {
+            id: "system",
+            label: I18n.t("bar.categorySystem"),
+            desc: I18n.t("bar.categorySystemDesc"),
+            icon: "computer"
+        },
+        {
+            id: "utilities",
+            label: I18n.t("bar.categoryUtilities"),
+            desc: I18n.t("bar.categoryUtilitiesDesc"),
+            icon: "star"
+        }
+    ]
+
+    // { categoryId: [item, ...] }, catalog order preserved within each group.
+    readonly property var itemsByCategory: {
+        const out = {};
+        for (const cat of root.categories)
+            out[cat.id] = [];
+        for (const item of root.items) {
+            const c = item.category && out[item.category] ? item.category : "utilities";
+            out[c].push(item);
+        }
+        return out;
+    }
 
     property var _state: {
         const s = {};
@@ -311,6 +446,21 @@ Singleton {
         root.pinnedIds = next;
         BarConfig.patch({
             pinnedIds: next
+        });
+    }
+
+    // Restore every item to enabled, the default zone layout, and no pins.
+    function resetToDefault() {
+        const s = {};
+        for (const item of root.items)
+            s[item.id] = true;
+        _state = s;
+        root.pinnedIds = [];
+        root.zones = root._defaultZones();
+        BarConfig.patch({
+            itemStates: s,
+            pinnedIds: [],
+            zones: root.zones
         });
     }
 

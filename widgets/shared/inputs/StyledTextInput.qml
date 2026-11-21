@@ -49,7 +49,7 @@ Rectangle {
         Text {
             visible: root.icon.length > 0
             text: root.icon
-            font.family: "Material Icons"
+            font.family: "Material Symbols Rounded"
             font.pixelSize: UIScale.fontLead
             color: field.activeFocus ? Colors.accent : Colors.muted
             Behavior on color {

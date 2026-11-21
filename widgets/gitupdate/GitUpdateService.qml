@@ -15,6 +15,8 @@ import Quickshell.Io
 Singleton {
     id: root
 
+    readonly property string identityIcon: "system_update_alt"
+
     readonly property string repoPath: Quickshell.shellDir
 
     // "unknown" | "checking" | "upToDate" | "updatable" | "blocked" | "offline" | "noGit" | "noOrigin" | "notGitRepo" | "pulling" | "pullFailed"
@@ -31,6 +33,8 @@ Singleton {
     signal pullSucceeded
 
     readonly property bool showBadge: status === "updatable" || status === "blocked" || status === "pulling" || status === "pullFailed"
+
+    readonly property string icon: "system_update_alt"
 
     readonly property var _env: ({
             "GIT_TERMINAL_PROMPT": "0"

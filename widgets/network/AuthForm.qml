@@ -96,7 +96,7 @@ Rectangle {
                 anchors.rightMargin: Math.round(8 * UIScale.value)
                 anchors.verticalCenter: parent.verticalCenter
                 text: authPassVisible ? "" : ""
-                font.family: "Material Icons"
+                font.family: "Material Symbols Rounded"
                 font.pixelSize: Math.round(16 * UIScale.value)
                 color: eyeMa.containsMouse ? Colors.accent : Colors.muted
                 Behavior on color {

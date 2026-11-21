@@ -7,6 +7,8 @@ import Quickshell
 Singleton {
     id: root
 
+    readonly property string identityIcon: "desktop_windows"
+
     property string monitorName: _backend.monitorName
     property string monitorModel: _backend.monitorModel
     property string monitorMake: _backend.monitorMake

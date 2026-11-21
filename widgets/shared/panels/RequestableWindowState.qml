@@ -9,6 +9,8 @@ Singleton {
 
     required property string configName
 
+    property string icon: ""
+
     property string requestedPageId: ""
     property string requestedSubTabId: ""
     property string requestedSearch: ""

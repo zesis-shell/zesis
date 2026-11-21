@@ -8,6 +8,7 @@ import "../bluetooth"
 Singleton {
     id: root
 
+    readonly property string identityIcon: "headset"
     readonly property bool connected: _state.connected
     readonly property int leftLevel: _state.left
     readonly property int rightLevel: _state.right

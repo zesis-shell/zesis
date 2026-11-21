@@ -43,75 +43,75 @@ PanelWindow {
     readonly property var widgetItems: [
         {
             label: "Tray",
-            icon: "󱒔"
+            icon: "widgets"
         },
         {
             label: "SysMon",
-            icon: "󰻠"
+            icon: "memory"
         },
         {
             label: "Theme",
-            icon: "󰔎"
+            icon: "contrast"
         },
         {
             label: "Keybinds",
-            icon: "󰌌"
+            icon: "keyboard"
         },
         {
             label: "Bluetooth",
-            icon: "󰂯"
+            icon: "bluetooth"
         },
         {
             label: "AirPods",
-            icon: "󰋋"
+            icon: "headphones"
         },
         {
             label: "Wi-Fi",
-            icon: "󰤨"
+            icon: "wifi"
         },
         {
             label: "Weather",
-            icon: "󰖕"
+            icon: "partly_cloudy_day"
         },
         {
             label: "Brightness",
-            icon: "󰃟"
+            icon: "brightness_medium"
         },
         {
             label: "Sound",
-            icon: "󰕾"
+            icon: "volume_up"
         },
         {
             label: "Mic",
-            icon: "󰍬"
+            icon: "mic"
         },
         {
             label: "Notifs",
-            icon: "󰂚"
+            icon: "notifications"
         },
         {
             label: "Config",
-            icon: "󰒓"
+            icon: "settings"
         },
         {
             label: "Battery",
-            icon: "󰁹"
+            icon: "battery_full"
         },
         {
             label: "Record",
-            icon: "󰑊"
+            icon: "fiber_manual_record"
         },
         {
             label: "Home",
-            icon: ""
+            icon: "home"
         },
         {
             label: "Lock",
-            icon: "󰌾"
+            icon: "lock"
         },
         {
             label: "Clock",
-            icon: "󰥔"
+            icon: "schedule"
         },
     ]
 
@@ -232,6 +232,7 @@ PanelWindow {
 
                     Text {
                         text: del.modelData.icon
+                        font.family: "Material Symbols Rounded"
                         font.pixelSize: UIScale.fontBody
                         color: del.isSelected ? Colors.accent : Colors.text
                         Behavior on color {

@@ -23,12 +23,6 @@ Item {
         }
     }
 
-    function micIcon(v, m) {
-        if (m || v === 0)
-            return "󰍭";
-        return "󰍬";
-    }
-
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
@@ -59,7 +53,7 @@ Item {
 
                 // Master mic card
                 AudioMasterCard {
-                    icon: root.micIcon(root.vol, root.muted)
+                    icon: MicService.icon
                     label: I18n.t("mic.input")
                     vol: root.vol
                     muted: root.muted
@@ -83,8 +77,8 @@ Item {
                 // Per-app capture streams
                 AudioStreamMixer {
                     isSource: true
-                    mutedGlyph: "󰍭"
-                    unmutedGlyph: "󰍬"
+                    mutedGlyph: "mic_off"
+                    unmutedGlyph: "mic"
                     mutedLabel: I18n.t("mic.muted")
                 }
 
@@ -118,7 +112,8 @@ Item {
                             spacing: UIScale.spacingSm
 
                             Text {
-                                text: "󰍬"
+                                text: "mic"
+                                font.family: "Material Symbols Rounded"
                                 font.pixelSize: Math.round(16 * UIScale.value)
                                 color: Colors.accent
                             }

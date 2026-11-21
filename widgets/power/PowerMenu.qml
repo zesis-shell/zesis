@@ -29,25 +29,25 @@ Item {
     readonly property var _actions: [
         {
             key: "lock",
-            icon: "󰌾",
+            icon: "lock",
             label: I18n.t("power.lock"),
             confirm: false
         },
         {
             key: "logout",
-            icon: "󰍃",
+            icon: "logout",
             label: I18n.t("power.logOut"),
             confirm: false
         },
         {
             key: "reboot",
-            icon: "󰜉",
+            icon: "restart_alt",
             label: I18n.t("power.reboot"),
             confirm: true
         },
         {
             key: "shutdown",
-            icon: "󰐥",
+            icon: "power_settings_new",
             label: I18n.t("power.shutDown"),
             confirm: true
         }

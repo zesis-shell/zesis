@@ -82,7 +82,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: ""
-                    font.family: "Material Icons"
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: Math.round(18 * UIScale.value)
                     color: Colors.textDim
                 }
@@ -116,7 +116,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: ""
-                    font.family: "Material Icons"
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: Math.round(18 * UIScale.value)
                     color: Colors.textDim
                 }

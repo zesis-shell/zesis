@@ -299,8 +299,8 @@ Item {
                 }
                 Text {
                     anchors.centerIn: parent
-                    text: ""
-                    font.family: "Material Icons"
+                    text: "chevron_left"
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: Math.round(16 * UIScale.value)
                     color: Colors.textDim
                 }
@@ -331,8 +331,8 @@ Item {
                 }
                 Text {
                     anchors.centerIn: parent
-                    text: ""
-                    font.family: "Material Icons"
+                    text: "chevron_right"
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: Math.round(16 * UIScale.value)
                     color: Colors.textDim
                 }
@@ -389,8 +389,8 @@ Item {
                 }
                 Text {
                     anchors.centerIn: parent
-                    text: ""
-                    font.family: "Material Icons"
+                    text: "sync"
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: Math.round(16 * UIScale.value)
                     color: (CalendarService.syncing || CalendarService.loading) ? Colors.accent : Colors.textDim
                     Behavior on color {
@@ -423,8 +423,8 @@ Item {
                 }
                 Text {
                     anchors.centerIn: parent
-                    text: root._creating ? "" : ""
-                    font.family: "Material Icons"
+                    text: root._creating ? "close" : "add"
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: Math.round(16 * UIScale.value)
                     color: root._creating ? Colors.accent : Colors.textDim
                     Behavior on color {
@@ -1222,8 +1222,8 @@ Item {
                     }
                     Text {
                         anchors.centerIn: parent
-                        text: ""
-                        font.family: "Material Icons"
+                        text: "edit"
+                        font.family: "Material Symbols Rounded"
                         font.pixelSize: Math.round(14 * UIScale.value)
                         color: Colors.textDim
                     }
@@ -1249,8 +1249,8 @@ Item {
                     }
                     Text {
                         anchors.centerIn: parent
-                        text: ""
-                        font.family: "Material Icons"
+                        text: "close"
+                        font.family: "Material Symbols Rounded"
                         font.pixelSize: Math.round(14 * UIScale.value)
                         color: Colors.textDim
                     }
@@ -1272,8 +1272,8 @@ Item {
                 Layout.fillWidth: true
                 spacing: UIScale.spacingMd
                 Text {
-                    text: ""
-                    font.family: "Material Icons"
+                    text: "schedule"
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: UIScale.fontBody
                     color: Colors.muted
                     Layout.alignment: Qt.AlignTop
@@ -1301,8 +1301,8 @@ Item {
                 spacing: UIScale.spacingMd
                 visible: root._selectedEvent ? (root._selectedEvent.location || "") !== "" : false
                 Text {
-                    text: ""
-                    font.family: "Material Icons"
+                    text: "place"
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: UIScale.fontBody
                     color: Colors.muted
                     Layout.alignment: Qt.AlignTop
@@ -1322,8 +1322,8 @@ Item {
                 spacing: UIScale.spacingMd
                 visible: root._selectedEvent ? (root._selectedEvent.url || "") !== "" : false
                 Text {
-                    text: ""
-                    font.family: "Material Icons"
+                    text: "link"
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: UIScale.fontBody
                     color: Colors.muted
                 }
@@ -1348,8 +1348,8 @@ Item {
                 spacing: UIScale.spacingMd
                 visible: root._selectedEvent ? !!root._selectedEvent.organizer : false
                 Text {
-                    text: ""
-                    font.family: "Material Icons"
+                    text: "person"
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: UIScale.fontBody
                     color: Colors.muted
                     Layout.alignment: Qt.AlignTop
@@ -1380,8 +1380,8 @@ Item {
                 RowLayout {
                     spacing: UIScale.spacingMd
                     Text {
-                        text: ""
-                        font.family: "Material Icons"
+                        text: "group"
+                        font.family: "Material Symbols Rounded"
                         font.pixelSize: UIScale.fontBody
                         color: Colors.muted
                     }
@@ -1429,8 +1429,8 @@ Item {
                 spacing: UIScale.spacingMd
                 visible: root._selectedEvent ? (root._selectedEvent.reminderMin !== null && root._selectedEvent.reminderMin !== undefined) : false
                 Text {
-                    text: ""
-                    font.family: "Material Icons"
+                    text: "alarm"
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: UIScale.fontBody
                     color: Colors.muted
                 }

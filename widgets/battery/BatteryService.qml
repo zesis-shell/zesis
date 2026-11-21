@@ -7,6 +7,8 @@ import Quickshell.Services.UPower
 Singleton {
     id: root
 
+    readonly property string identityIcon: "battery_full"
+
     property bool testMode: false
     property int testPercent: 4
     property bool testCharging: false
@@ -113,17 +115,11 @@ Singleton {
         if (!available)
             return "";
         if (charging || full)
-            return "󰂄";
+            return "battery_charging_full";
         if (percent >= 90)
-            return "󰁹";
-        if (percent >= 70)
-            return "󰂁";
-        if (percent >= 50)
-            return "󰁿";
-        if (percent >= 30)
-            return "󰁽";
-        if (percent >= 10)
-            return "󰁺";
-        return "󰂃";
+            return "battery_full";
+        if (percent >= 20)
+            return "battery_std";
+        return "battery_alert";
     }
 }

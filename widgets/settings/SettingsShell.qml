@@ -6,6 +6,7 @@ import "../themeswitcher"
 import "../clock"
 import "../appswitcher"
 import "../workspaceindicator"
+import "../workspaceindicator/disc"
 import "../display"
 import "../bluetooth"
 import "../wifi"
@@ -24,29 +25,29 @@ IndexedPanelShell {
     pages: [
         {
             id: "appearance",
-            icon: "󰘮",
+            icon: "brush",
             label: I18n.t("settings_chrome.navAppearance")
         },
         {
             id: "barWidgets",
-            icon: "󰕪",
+            icon: "dashboard_customize",
             label: I18n.t("settings_chrome.navBarWidgets")
         },
         {
             id: "devices",
-            icon: "",
+            icon: "devices",
             label: I18n.t("settings_chrome.navDevices")
         },
         {
             id: "account",
-            icon: "",
+            icon: "account_circle",
             label: I18n.t("settings_chrome.navAccount"),
             component: userPanelComp,
             files: ["user/UserPanel.qml"]
         },
         {
             id: "about",
-            icon: "",
+            icon: "info",
             label: I18n.t("settings_chrome.navAbout"),
             component: aboutComp,
             files: ["about/About.qml"]
@@ -57,21 +58,21 @@ IndexedPanelShell {
             "appearance": [
                 {
                     id: "appearance",
-                    icon: "󰘮",
+                    icon: "brush",
                     label: I18n.t("settings_chrome.navAppearance"),
                     component: appearancePanelComp,
                     files: ["config/AppearancePanel.qml"]
                 },
                 {
                     id: "wallpaper",
-                    icon: "",
+                    icon: "wallpaper",
                     label: I18n.t("settings_chrome.navWallpaper"),
                     component: wallpaperPanelComp,
                     files: ["themeswitcher/WallpaperPanel.qml"]
                 },
                 {
                     id: "profiles",
-                    icon: "",
+                    icon: "person",
                     label: I18n.t("settings_chrome.navProfiles"),
                     component: profilesPanelComp,
                     files: ["config/ProfilesPanel.qml"]
@@ -80,28 +81,28 @@ IndexedPanelShell {
             "barWidgets": [
                 {
                     id: "bar",
-                    icon: "󰕪",
+                    icon: "toolbar",
                     label: I18n.t("settings_chrome.navBar"),
                     component: barPanelComp,
                     files: ["config/BarPanel.qml"]
                 },
                 {
                     id: "clock",
-                    icon: "",
+                    icon: ClockSettings.identityIcon,
                     label: I18n.t("settings_chrome.navClock"),
                     component: clockPanelComp,
                     files: ["clock/ClockPanel.qml"]
                 },
                 {
                     id: "appswitcher",
-                    icon: "",
+                    icon: AppSwitcherService.identityIcon,
                     label: I18n.t("settings_chrome.navAppSwitcher"),
                     component: appSwitcherPanelComp,
                     files: ["appswitcher/AppSwitcherPanel.qml"]
                 },
                 {
                     id: "workspace",
-                    icon: "",
+                    icon: WorkspaceDiscService.identityIcon,
                     label: I18n.t("settings_chrome.navWorkspace"),
                     component: workspaceIndicatorPanelComp,
                     files: ["workspaceindicator/WorkspaceIndicatorPanel.qml", "workspaceindicator/disc/WorkspaceDiscPanel.qml"]
@@ -110,35 +111,35 @@ IndexedPanelShell {
             "devices": [
                 {
                     id: "display",
-                    icon: "",
+                    icon: DisplayService.identityIcon,
                     label: I18n.t("settings_chrome.navDisplay"),
                     component: displayPanelComp,
                     files: ["display/DisplayPanel.qml"]
                 },
                 {
                     id: "bluetooth",
-                    icon: "󰂯",
+                    icon: BluetoothService.identityIcon,
                     label: I18n.t("settings_chrome.navBluetooth"),
                     component: bluetoothPanelComp,
                     files: ["bluetooth/BluetoothPanel.qml"]
                 },
                 {
                     id: "wifi",
-                    icon: "󰤨",
+                    icon: WifiService.identityIcon,
                     label: I18n.t("settings_chrome.navWifi"),
                     component: wifiPanelComp,
                     files: ["wifi/WifiPanel.qml"]
                 },
                 {
                     id: "sound",
-                    icon: "󰕾",
+                    icon: AudioService.identityIcon,
                     label: I18n.t("settings_chrome.navSound"),
                     component: soundPanelComp,
                     files: ["sound/Sound.qml"]
                 },
                 {
                     id: "microphone",
-                    icon: "󰍬",
+                    icon: MicService.identityIcon,
                     label: I18n.t("settings_chrome.navMicrophone"),
                     component: micPanelComp,
                     files: ["mic/Mic.qml"]

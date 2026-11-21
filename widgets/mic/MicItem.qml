@@ -5,7 +5,7 @@ import "../shared"
 
 BarButton {
     id: root
-    icon: MicService.muted ? "󰍭" : "󰍬"
+    icon: MicService.icon
     active: popup.visible
     onClicked: popup.visible ? popup.close() : popup.open()
 

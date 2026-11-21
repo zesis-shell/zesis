@@ -92,16 +92,16 @@ QtObject {
 
     function _icon(cat) {
         var icons = {
-            "Window": "󰖯",
-            "App": "󰀻",
-            "Workspace": "󰣠",
-            "Screenshot": "󰹑",
-            "Utilities": "",
-            "Media": "󰝚",
-            "Volume": "󰕾",
-            "Session": ""
+            "Window": "desktop_windows",
+            "App": "apps",
+            "Workspace": "workspaces",
+            "Screenshot": "screenshot_monitor",
+            "Utilities": "build",
+            "Media": "music_note",
+            "Volume": "volume_up",
+            "Session": "power_settings_new"
         };
-        return icons[cat] || "󰌌";
+        return icons[cat] || "keyboard";
     }
 
     function _parse(jsonText) {

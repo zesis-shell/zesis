@@ -7,9 +7,21 @@ import Quickshell.Services.Pipewire
 Singleton {
     id: root
 
+    readonly property string identityIcon: "volume_up"
+
     readonly property PwNode sink: Pipewire.defaultAudioSink
     readonly property real vol: sink?.audio?.volume ?? 0
     readonly property bool muted: sink?.audio?.muted ?? false
+
+    readonly property string icon: {
+        if (muted || vol === 0)
+            return "volume_off";
+        if (vol < 0.33)
+            return "volume_mute";
+        if (vol < 0.67)
+            return "volume_down";
+        return "volume_up";
+    }
 
     readonly property string _configDir: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/zesis"
     readonly property string _configPath: _configDir + "/sound.json"

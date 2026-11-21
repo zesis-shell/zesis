@@ -41,7 +41,7 @@ Rectangle {
 
         Text {
             text: root.navIcon
-            font.family: "Material Icons"
+            font.family: "Material Symbols Rounded"
             font.pixelSize: Math.round(18 * UIScale.value)
             color: root.isNavSelected ? Colors.accent : Colors.textDim
             Behavior on color {

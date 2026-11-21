@@ -15,16 +15,6 @@ Item {
     readonly property real vol: AudioService.vol
     readonly property bool muted: AudioService.muted
 
-    function volIcon(v, m) {
-        if (m || v === 0)
-            return "󰝟";
-        if (v < 0.33)
-            return "󰕿";
-        if (v < 0.67)
-            return "󰖀";
-        return "󰕾";
-    }
-
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
@@ -55,7 +45,7 @@ Item {
 
                 // Master card
                 AudioMasterCard {
-                    icon: root.volIcon(root.vol, root.muted)
+                    icon: AudioService.icon
                     label: I18n.t("sound.master")
                     vol: root.vol
                     muted: root.muted
@@ -79,8 +69,8 @@ Item {
                 // Per-app streams
                 AudioStreamMixer {
                     isSource: false
-                    mutedGlyph: "󰝟"
-                    unmutedGlyph: "󰓃"
+                    mutedGlyph: "volume_off"
+                    unmutedGlyph: "speaker"
                     mutedLabel: I18n.t("sound.muted")
                 }
 
@@ -188,7 +178,8 @@ Item {
                         spacing: UIScale.spacingSm
 
                         Text {
-                            text: "󰋋"
+                            text: "headset"
+                            font.family: "Material Symbols Rounded"
                             font.pixelSize: Math.round(16 * UIScale.value)
                             color: Colors.accent
                         }

@@ -12,6 +12,8 @@ import "../wm"
 Singleton {
     id: root
 
+    readonly property string identityIcon: "view_carousel"
+
     property bool open: false
     property int selectedIndex: 0
 

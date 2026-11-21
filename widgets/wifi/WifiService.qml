@@ -6,6 +6,8 @@ import Quickshell.Networking
 Singleton {
     id: root
 
+    readonly property string identityIcon: "wifi"
+
     // Set true to use fake networks instead of real NetworkManager
     property bool testMode: false
 
@@ -65,24 +67,39 @@ Singleton {
         return _realDevice.networks.values.slice().sort((a, b) => b.signalStrength - a.signalStrength);
     }
 
+    // Wi-Fi symbol for a network. The font's strength glyphs are filled
+    // wedges that don't read as Wi-Fi, so every network gets the arcs and
+    // strength is carried by signalOpacity() instead.
     function signalIcon(strength) {
-        if (strength >= 0.75)
-            return "󰤨";
-        if (strength >= 0.5)
-            return "󰤥";
-        if (strength >= 0.25)
-            return "󰤢";
-        if (strength > 0)
-            return "󰤟";
-        return "󰤯";
+        return "wifi";
     }
 
+    // Arc opacity for a signal level: full when strong, fading as it weakens.
+    function signalOpacity(strength) {
+        if (strength >= 0.75)
+            return 1.0;
+        if (strength >= 0.5)
+            return 0.75;
+        if (strength > 0)
+            return 0.5;
+        return 0.3;
+    }
+
+    // Status icon, following Windows: a wired connection takes priority over
+    // Wi-Fi, so the cable icon shows whenever one is up. Otherwise the Wi-Fi
+    // arcs when connected, and the slashed arcs when not.
     function barIcon() {
-        if (onEthernet && !connected)
-            return "󰈀";
+        if (onEthernet)
+            return "lan";
         if (!available || !enabled || !connected)
-            return "󰤭";
-        return signalIcon(signalStrength);
+            return "portable_wifi_off";
+        return "wifi";
+    }
+
+    function barOpacity() {
+        if (onEthernet || !connected)
+            return 1.0;
+        return signalOpacity(signalStrength);
     }
 
     function needsPsk(network) {

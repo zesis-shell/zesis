@@ -50,11 +50,12 @@ Item {
                             text: {
                                 var p = BrightnessService.percent;
                                 if (p >= 80)
-                                    return "󰃠";
+                                    return "brightness_high";
                                 if (p >= 40)
-                                    return "󰃟";
-                                return "󰃞";
+                                    return "brightness_medium";
+                                return "brightness_low";
                             }
+                            font.family: "Material Symbols Rounded"
                             font.pixelSize: Math.round(20 * UIScale.value)
                             color: Colors.accent
                         }

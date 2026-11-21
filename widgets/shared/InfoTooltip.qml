@@ -25,8 +25,8 @@ Item {
 
         Text {
             anchors.centerIn: parent
-            text: ""
-            font.family: "Material Icons"
+            text: "info"
+            font.family: "Material Symbols Rounded"
             font.pixelSize: Math.round(11 * UIScale.value)
             color: Colors.textDim
         }

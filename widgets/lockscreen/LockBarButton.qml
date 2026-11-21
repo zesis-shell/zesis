@@ -3,6 +3,6 @@ import "../bar"
 
 // Bar atom
 BarButton {
-    icon: "󰌾"
+    icon: LockService.icon
     onClicked: LockService.triggerLock()
 }

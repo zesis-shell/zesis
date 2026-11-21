@@ -31,7 +31,8 @@ Item {
         Text {
             id: iconText
             anchors.verticalCenter: parent.verticalCenter
-            text: "󰝚"
+            text: "music_note"
+            font.family: "Material Symbols Rounded"
             color: Colors.muted
             font.pixelSize: UIScale.fontLead
         }
@@ -56,7 +57,8 @@ Item {
         Text {
             id: iconTextV
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "󰝚"
+            text: "music_note"
+            font.family: "Material Symbols Rounded"
             color: Colors.muted
             font.pixelSize: UIScale.fontLead
         }

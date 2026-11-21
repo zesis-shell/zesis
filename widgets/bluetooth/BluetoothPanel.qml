@@ -48,7 +48,8 @@ Item {
                             spacing: Math.round(6 * UIScale.value)
 
                             Text {
-                                text: "󰂱"
+                                text: "bluetooth_searching"
+                                font.family: "Material Symbols Rounded"
                                 font.pixelSize: Math.round(15 * UIScale.value)
                                 color: BluetoothService.scanning ? Colors.accent : Colors.textDim
                                 anchors.verticalCenter: parent.verticalCenter
@@ -180,7 +181,8 @@ Item {
                                 spacing: Math.round(5 * UIScale.value)
 
                                 Text {
-                                    text: "󰂯"
+                                    text: "bluetooth"
+                                    font.family: "Material Symbols Rounded"
                                     font.pixelSize: Math.round(11 * UIScale.value)
                                     color: adapterChip.isActive ? Colors.accent : Colors.textDim
                                     anchors.verticalCenter: parent.verticalCenter
@@ -309,6 +311,7 @@ Item {
                                         Text {
                                             anchors.centerIn: parent
                                             text: BluetoothService.deviceIcon(pairedItem.modelData.icon, pairedItem.modelData.name)
+                                            font.family: "Material Symbols Rounded"
                                             font.pixelSize: Math.round(18 * UIScale.value)
                                             color: pairedItem.modelData.connected ? Colors.accent : Colors.muted
                                             Behavior on color {
@@ -459,7 +462,8 @@ Item {
 
                                             Text {
                                                 anchors.centerIn: parent
-                                                text: "󰑓"
+                                                text: "refresh"
+                                                font.family: "Material Symbols Rounded"
                                                 font.pixelSize: Math.round(14 * UIScale.value)
                                                 color: Colors.accent
                                                 visible: pairedItem.isLoading
@@ -687,6 +691,7 @@ Item {
                                     Text {
                                         anchors.centerIn: parent
                                         text: BluetoothService.deviceIcon(nearbyItem.modelData.icon, nearbyItem.modelData.name)
+                                        font.family: "Material Symbols Rounded"
                                         font.pixelSize: Math.round(18 * UIScale.value)
                                         color: Colors.textDim
                                     }
@@ -752,7 +757,8 @@ Item {
                                             rightMargin: Math.round(5 * UIScale.value)
                                             verticalCenter: parent.verticalCenter
                                         }
-                                        text: "󰑓"
+                                        text: "refresh"
+                                        font.family: "Material Symbols Rounded"
                                         font.pixelSize: Math.round(12 * UIScale.value)
                                         color: Colors.accent
                                         visible: nearbyItem.modelData.pairing

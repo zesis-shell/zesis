@@ -105,6 +105,7 @@ Item {
 
                     Text {
                         text: WeatherService.weatherIcon(hourRow.modelData.weatherCode, hourRow.modelData.hour >= 6 && hourRow.modelData.hour < 20)
+                        font.family: "Material Symbols Rounded"
                         font.pixelSize: Math.round(18 * UIScale.value)
                         color: Colors.text
                     }
@@ -173,6 +174,7 @@ Item {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: WeatherService.weatherIcon(hourChip.modelData.weatherCode, hourChip.modelData.hour >= 6 && hourChip.modelData.hour < 20)
+                        font.family: "Material Symbols Rounded"
                         font.pixelSize: Math.round(18 * UIScale.value)
                         color: Colors.text
                     }
@@ -227,6 +229,7 @@ Item {
 
                     Text {
                         text: WeatherService.weatherIcon(dayRow.modelData.weatherCode, true)
+                        font.family: "Material Symbols Rounded"
                         font.pixelSize: Math.round(18 * UIScale.value)
                         color: Colors.text
                     }
@@ -295,6 +298,7 @@ Item {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: WeatherService.weatherIcon(dayChip.modelData.weatherCode, true)
+                        font.family: "Material Symbols Rounded"
                         font.pixelSize: Math.round(18 * UIScale.value)
                         color: Colors.text
                     }
@@ -620,7 +624,8 @@ Item {
 
         Text {
             anchors.verticalCenter: parent.verticalCenter
-            text: ""
+            text: "settings"
+            font.family: "Material Symbols Rounded"
             font.pixelSize: Math.round(16 * UIScale.value)
             color: root._showSettings ? Colors.accent : (settingsHov.hovered ? Colors.text : Colors.textDim)
             Behavior on color {
@@ -640,7 +645,8 @@ Item {
 
         Text {
             anchors.verticalCenter: parent.verticalCenter
-            text: "󰑓"
+            text: "refresh"
+            font.family: "Material Symbols Rounded"
             font.pixelSize: Math.round(16 * UIScale.value)
             color: refreshHov.hovered ? Colors.text : Colors.textDim
             Behavior on color {

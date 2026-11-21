@@ -11,7 +11,6 @@
   athroisma,
   congeries,
   makeFontsConf,
-  nerd-fonts,
 }: let
   projectPackages = [
     quickshell
@@ -22,7 +21,7 @@
     qt6.qtshadertools
     athroisma
     congeries
-    nerd-fonts.symbols-only
+    pkgs.material-symbols
     (python3.withPackages (ps:
       with ps; [
         icalendar
@@ -48,7 +47,7 @@ in
       "${qt6.qtbase}/lib/qt-6/plugins"
     ];
 
-    FONTCONFIG_FILE = makeFontsConf {fontDirectories = [nerd-fonts.symbols-only];};
+    FONTCONFIG_FILE = makeFontsConf {fontDirectories = [pkgs.material-symbols];};
 
     ZESIS_DEV = "1";
   }

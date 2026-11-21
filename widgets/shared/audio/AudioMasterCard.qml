@@ -57,6 +57,7 @@ Rectangle {
                     id: iconText
                     anchors.centerIn: parent
                     text: root.icon
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: Math.round(20 * UIScale.value)
                     color: root.muted ? Colors.muted : Colors.accent
                     Behavior on color {

@@ -62,8 +62,8 @@ Item {
 
                         Text {
                             anchors.centerIn: parent
-                            text: ""
-                            font.family: "Material Icons"
+                            text: "settings"
+                            font.family: "Material Symbols Rounded"
                             font.pixelSize: Math.round(16 * UIScale.value)
                             color: root.showSettings ? Colors.accent : Colors.textDim
                         }
@@ -97,8 +97,8 @@ Item {
                             spacing: Math.round(7 * UIScale.value)
 
                             Text {
-                                text: ""
-                                font.family: "Material Icons"
+                                text: "refresh"
+                                font.family: "Material Symbols Rounded"
                                 font.pixelSize: Math.round(15 * UIScale.value)
                                 color: Colors.textDim
                                 anchors.verticalCenter: parent.verticalCenter
@@ -363,8 +363,8 @@ Item {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: ""
-                                font.family: "Material Icons"
+                                text: "storage"
+                                font.family: "Material Symbols Rounded"
                                 font.pixelSize: Math.round(24 * UIScale.value)
                                 color: Colors.accent
                             }
@@ -503,8 +503,8 @@ Item {
                                 spacing: Math.round(7 * UIScale.value)
 
                                 Text {
-                                    text: ""
-                                    font.family: "Material Icons"
+                                    text: "power_settings_new"
+                                    font.family: "Material Symbols Rounded"
                                     font.pixelSize: UIScale.fontLead
                                     color: Colors.textDim
                                     anchors.verticalCenter: parent.verticalCenter
@@ -705,8 +705,8 @@ Item {
                                     }
 
                                     Text {
-                                        text: ""
-                                        font.family: "Material Icons"
+                                        text: "chevron_right"
+                                        font.family: "Material Symbols Rounded"
                                         font.pixelSize: Math.round(16 * UIScale.value)
                                         color: srvCard.isSelected ? Colors.accent : Colors.withAlpha(Colors.text, 0.35)
                                         Behavior on color {
@@ -753,8 +753,8 @@ Item {
                                 spacing: Math.round(7 * UIScale.value)
 
                                 Text {
-                                    text: ""
-                                    font.family: "Material Icons"
+                                    text: "add"
+                                    font.family: "Material Symbols Rounded"
                                     font.pixelSize: Math.round(15 * UIScale.value)
                                     color: Colors.textDim
                                     anchors.verticalCenter: parent.verticalCenter
@@ -895,8 +895,8 @@ Item {
 
                                                         Text {
                                                             anchors.centerIn: parent
-                                                            text: ""
-                                                            font.family: "Material Icons"
+                                                            text: "folder"
+                                                            font.family: "Material Symbols Rounded"
                                                             font.pixelSize: Math.round(20 * UIScale.value)
                                                             color: Colors.accent
                                                         }
@@ -950,8 +950,8 @@ Item {
                                                             spacing: UIScale.spacingXs
 
                                                             Text {
-                                                                text: ""
-                                                                font.family: "Material Icons"
+                                                                text: "open_in_new"
+                                                                font.family: "Material Symbols Rounded"
                                                                 font.pixelSize: UIScale.fontBody
                                                                 color: Colors.accent
                                                                 anchors.verticalCenter: parent.verticalCenter

@@ -6,6 +6,8 @@ import Quickshell.Io
 Singleton {
     id: root
 
+    readonly property string identityIcon: "brightness_medium"
+
     property bool testMode: false
     property int testPercent: 65
 
@@ -13,6 +15,14 @@ Singleton {
     property int current: 0
     property int max: 100
     readonly property int percent: testMode ? testPercent : (max > 0 ? Math.round(current / max * 100) : 0)
+
+    readonly property string icon: {
+        if (percent >= 80)
+            return "brightness_high";
+        if (percent >= 40)
+            return "brightness_medium";
+        return "brightness_low";
+    }
 
     function set(pct) {
         if (testMode) {

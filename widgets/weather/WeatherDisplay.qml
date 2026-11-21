@@ -8,6 +8,7 @@ Item {
     // must have zero dependency on compact/narrow, even indirectly. See docs/qml-patterns.md #2.
     TextMetrics {
         id: fullIconMetrics
+        font.family: "Material Symbols Rounded"
         font.pixelSize: Math.round(44 * UIScale.value)
         text: WeatherService.weatherIcon(WeatherService.weatherCode, WeatherService.isDay)
     }
@@ -47,6 +48,7 @@ Item {
             id: iconText
             anchors.verticalCenter: parent.verticalCenter
             text: WeatherService.weatherIcon(WeatherService.weatherCode, WeatherService.isDay)
+            font.family: "Material Symbols Rounded"
             font.pixelSize: Math.round((root.compact ? 30 : 44) * UIScale.value)
             color: Colors.text
         }
@@ -76,16 +78,38 @@ Item {
                 visible: !root.compact
                 spacing: Math.round(10 * UIScale.value)
 
-                Text {
-                    text: "󰖌 " + WeatherService.humidity + "%"
-                    font.pixelSize: UIScale.fontCaption
-                    color: Colors.textDim
+                Row {
+                    spacing: Math.round(4 * UIScale.value)
+
+                    Text {
+                        text: "opacity"
+                        font.family: "Material Symbols Rounded"
+                        font.pixelSize: UIScale.fontCaption
+                        color: Colors.textDim
+                    }
+
+                    Text {
+                        text: WeatherService.humidity + "%"
+                        font.pixelSize: UIScale.fontCaption
+                        color: Colors.textDim
+                    }
                 }
 
-                Text {
-                    text: "󰖝 " + WeatherService.windspeed + " km/h"
-                    font.pixelSize: UIScale.fontCaption
-                    color: Colors.textDim
+                Row {
+                    spacing: Math.round(4 * UIScale.value)
+
+                    Text {
+                        text: "flag"
+                        font.family: "Material Symbols Rounded"
+                        font.pixelSize: UIScale.fontCaption
+                        color: Colors.textDim
+                    }
+
+                    Text {
+                        text: WeatherService.windspeed + " km/h"
+                        font.pixelSize: UIScale.fontCaption
+                        color: Colors.textDim
+                    }
                 }
             }
         }

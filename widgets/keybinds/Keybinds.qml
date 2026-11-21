@@ -56,7 +56,8 @@ Item {
                     spacing: UIScale.spacingSm
 
                     Text {
-                        text: "󰍉"
+                        text: "search"
+                        font.family: "Material Symbols Rounded"
                         color: Colors.textDim
                         font.pixelSize: Math.round(16 * UIScale.value)
                         Layout.alignment: Qt.AlignVCenter
@@ -135,6 +136,7 @@ Item {
 
                                     Text {
                                         text: sectionCard.modelData.icon
+                                        font.family: "Material Symbols Rounded"
                                         color: Colors.accent
                                         font.pixelSize: Math.round(15 * UIScale.value)
                                         anchors.verticalCenter: parent.verticalCenter
