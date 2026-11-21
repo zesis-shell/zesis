@@ -188,6 +188,7 @@ PanelWindow {
                 Text {
                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                     text: root.iconFor(root.vol, root.muted)
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: Math.round(20 * UIScale.value)
                     color: root.muted ? Colors.muted : Colors.accent
                     Behavior on color {

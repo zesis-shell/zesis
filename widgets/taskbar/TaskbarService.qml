@@ -6,6 +6,8 @@ import Quickshell
 Singleton {
     id: root
 
+    readonly property string identityIcon: "apps"
+
     // Which TaskbarItem instance currently owns the popup. Null = none.
     // Keyed by instance.
     property var activeItem: null

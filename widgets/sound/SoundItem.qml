@@ -8,17 +8,7 @@ BarButton {
     active: popup.visible
     onClicked: popup.visible ? popup.close() : popup.open()
 
-    readonly property real _vol: AudioService.vol
-    readonly property bool _muted: AudioService.muted
-    icon: {
-        if (_muted || _vol === 0)
-            return "󰝟";
-        if (_vol < 0.33)
-            return "󰕿";
-        if (_vol < 0.67)
-            return "󰖀";
-        return "󰕾";
-    }
+    icon: AudioService.icon
 
     WheelHandler {
         onWheel: function (w) {

@@ -6,7 +6,7 @@ import "../shared"
 
 BarButton {
     id: root
-    icon: "󰔯"
+    icon: "palette"
     active: popup.visible
     onClicked: popup.visible ? popup.close() : popup.open()
 

@@ -71,7 +71,8 @@ Rectangle {
             }
 
             Text {
-                text: root.pskVisible ? "󰛐" : "󰛑"
+                text: root.pskVisible ? "visibility" : "visibility_off"
+                font.family: "Material Symbols Rounded"
                 font.pixelSize: Math.round(16 * UIScale.value)
                 color: eyeHov.hovered ? Colors.text : Colors.textDim
                 Behavior on color {

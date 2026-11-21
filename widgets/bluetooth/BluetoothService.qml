@@ -9,7 +9,11 @@ import "../../"
 Singleton {
     id: root
 
+    readonly property string identityIcon: "bluetooth"
+
     property BluetoothAdapter activeAdapter: Bluetooth.defaultAdapter
+
+    readonly property string icon: root.powered ? "bluetooth" : "bluetooth_disabled"
 
     readonly property string _configPath: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/zesis/bluetooth.json"
 
@@ -50,40 +54,40 @@ Singleton {
         var i = (iconStr || "").toLowerCase();
         var n = (deviceName || "").toLowerCase();
         if (i.includes("headphone") || i.includes("headset"))
-            return "󰋋";
+            return "headset";
         if (i.includes("audio"))
-            return "󰓃";
+            return "speaker";
         if (i.includes("gaming") || i.includes("joystick"))
-            return "󰊱";
+            return "gamepad";
         if (i.includes("keyboard"))
-            return "󰌌";
+            return "keyboard";
         if (i.includes("mouse"))
-            return "󰍽";
+            return "mouse";
         if (i.includes("tablet"))
-            return "󰓶";
+            return "tablet";
         if (i.includes("phone"))
-            return "󰄜";
+            return "phone_android";
         if (i.includes("computer") || i.includes("laptop"))
-            return "󰌢";
+            return "laptop";
         if (i.includes("camera"))
-            return "󰄀";
+            return "photo_camera";
         if (i.includes("printer"))
-            return "󰐪";
+            return "print";
         if (i.includes("watch"))
-            return "󰖉";
+            return "watch";
         if (i.includes("multimedia") || i.includes("speaker"))
-            return "󰓃";
+            return "speaker";
         if (n.includes("headphone") || n.includes("headset") || n.includes("airpod") || n.includes("earbud") || n.includes("buds"))
-            return "󰋋";
+            return "headset";
         if (n.includes("controller") || n.includes("dualsense") || n.includes("gamepad") || n.includes("xbox"))
-            return "󰊱";
+            return "gamepad";
         if (n.includes("keyboard"))
-            return "󰌌";
+            return "keyboard";
         if (n.includes("mouse"))
-            return "󰍽";
+            return "mouse";
         if (n.includes("phone"))
-            return "󰄜";
-        return "󰂯";
+            return "phone_android";
+        return "bluetooth";
     }
 
     function batteryColor(level) {

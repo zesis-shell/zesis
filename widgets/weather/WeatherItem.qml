@@ -23,7 +23,8 @@ Item {
 
         Text {
             anchors.verticalCenter: parent.verticalCenter
-            text: WeatherService.loading && WeatherService.weatherCode === 0 ? "󰖙" : WeatherService.weatherIcon(WeatherService.weatherCode, WeatherService.isDay)
+            text: WeatherService.loading && WeatherService.weatherCode === 0 ? "wb_sunny" : WeatherService.icon
+            font.family: "Material Symbols Rounded"
             font.pixelSize: Math.round(15 * UIScale.value)
             color: (mouseArea.containsMouse || popup.visible) ? Colors.accent : Colors.text
             Behavior on color {

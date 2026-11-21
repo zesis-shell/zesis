@@ -4,4 +4,6 @@ import "../shared/panels"
 
 RequestableWindowState {
     configName: "settingswindow"
+    icon: "settings"
+    readonly property string identityIcon: "settings"
 }

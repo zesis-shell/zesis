@@ -8,6 +8,8 @@ import "../wm"
 Singleton {
     id: root
 
+    readonly property string identityIcon: "notifications"
+
     property int count: server.trackedNotifications.values.length
     property int unreadCount: 0
     property bool replyActive: false
@@ -22,6 +24,14 @@ Singleton {
 
     readonly property var notifications: server.trackedNotifications
     readonly property ListModel history: historyModel
+
+    readonly property string icon: {
+        if (root.muted)
+            return root.history.count > 0 ? "notifications_paused" : "notifications_off";
+        if (root.unreadCount > 0)
+            return "notifications_active";
+        return root.history.count > 0 ? "notifications" : "notifications_none";
+    }
 
     Component.onCompleted: Qt.callLater(function () {
         root._loaded = true;

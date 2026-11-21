@@ -61,6 +61,7 @@ Item {
 
                         Text {
                             text: BatteryService.icon
+                            font.family: "Material Symbols Rounded"
                             font.pixelSize: Math.round(28 * UIScale.value)
                             color: {
                                 if (!BatteryService.available)

@@ -10,6 +10,8 @@ import "../../"
 Singleton {
     id: root
 
+    readonly property string identityIcon: "palette"
+
     property bool open: false
     property int selectedIndex: 0
 

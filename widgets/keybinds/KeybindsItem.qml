@@ -1,7 +1,7 @@
 import "../bar"
 
 BarButton {
-    icon: "󰌌"
+    icon: KeybindService.icon
     active: KeybindService.popupOpen
     onClicked: KeybindService.popupOpen = !KeybindService.popupOpen
 }

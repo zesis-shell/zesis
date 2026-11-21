@@ -5,7 +5,7 @@ import "../shared"
 
 BarButton {
     id: root
-    icon: NotifServer.muted ? (NotifServer.history.count > 0 ? "󰂛" : "") : NotifServer.unreadCount > 0 ? "󱅫" : NotifServer.history.count > 0 ? "󰂚" : ""
+    icon: NotifServer.icon
     active: popup.visible
     onClicked: popup.visible ? popup.close() : popup.open()
 

@@ -3,7 +3,7 @@ import "../bar"
 
 // Bar atom
 BarButton {
-    icon: "󰘮"
+    icon: SettingsWindowService.icon
     active: SettingsWindowService.windowOpen
     onClicked: SettingsWindowService.windowOpen ? SettingsWindowService.requestClose() : SettingsWindowService.openPage("appearance")
 }

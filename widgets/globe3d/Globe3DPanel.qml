@@ -99,7 +99,7 @@ Item {
 
                 Text {
                     text: Globe3DService.settingsCollapsed ? "C" : "O"
-                    font.family: "Material Icons"
+                    font.family: "Material Symbols Rounded"
                     font.pixelSize: Math.round(18 * UIScale.value)
                     color: collapseHover.hovered ? Colors.accent : Colors.textDim
                     scale: collapseHover.hovered ? 1.1 : 1.0

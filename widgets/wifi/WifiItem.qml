@@ -7,6 +7,7 @@ BarButton {
     id: root
     readonly property bool available: WifiService.showInBar
     icon: WifiService.barIcon()
+    iconOpacity: WifiService.barOpacity()
     active: popup.visible
     visible: available
     onClicked: popup.visible ? popup.close() : popup.open()

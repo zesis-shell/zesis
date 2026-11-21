@@ -13,7 +13,7 @@ import "../airpods"
 BarButton {
     id: root
 
-    icon: BluetoothService.powered ? "󰂯" : "󰂲"
+    icon: BluetoothService.icon
     active: popup.visible
     onClicked: popup.visible ? popup.close() : popup.open()
 
@@ -170,6 +170,7 @@ BarButton {
                                         Text {
                                             anchors.centerIn: parent
                                             text: BluetoothService.deviceIcon(devRow.modelData.icon, devRow.modelData.name)
+                                            font.family: "Material Symbols Rounded"
                                             font.pixelSize: Math.round(16 * UIScale.value)
                                             color: devRow.modelData.connected ? Colors.accent : Colors.muted
                                             Behavior on color {
@@ -291,7 +292,8 @@ BarButton {
 
                                         Text {
                                             anchors.centerIn: parent
-                                            text: "󰑓"
+                                            text: "refresh"
+                                            font.family: "Material Symbols Rounded"
                                             font.pixelSize: Math.round(12 * UIScale.value)
                                             color: Colors.accent
                                             visible: devRow.isLoading

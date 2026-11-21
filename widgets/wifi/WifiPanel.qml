@@ -95,7 +95,8 @@ Item {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: "󰈀"
+                                text: "wifi"
+                                font.family: "Material Symbols Rounded"
                                 font.pixelSize: Math.round(22 * UIScale.value)
                                 color: Colors.accent
                             }
@@ -173,6 +174,8 @@ Item {
                             Text {
                                 anchors.centerIn: parent
                                 text: WifiService.signalIcon(WifiService.signalStrength)
+                                opacity: WifiService.signalOpacity(WifiService.signalStrength)
+                                font.family: "Material Symbols Rounded"
                                 font.pixelSize: Math.round(26 * UIScale.value)
                                 color: Colors.accent
                             }
@@ -278,7 +281,7 @@ Item {
 
                                 Text {
                                     text: ""
-                                    font.family: "Material Icons"
+                                    font.family: "Material Symbols Rounded"
                                     font.pixelSize: UIScale.fontLead
                                     color: Colors.textDim
                                     anchors.verticalCenter: parent.verticalCenter
@@ -402,6 +405,8 @@ Item {
                                     Text {
                                         anchors.centerIn: parent
                                         text: WifiService.signalIcon(netItem.modelData.signalStrength)
+                                        opacity: WifiService.signalOpacity(netItem.modelData.signalStrength)
+                                        font.family: "Material Symbols Rounded"
                                         font.pixelSize: Math.round(18 * UIScale.value)
                                         color: netItem.isConnected ? Colors.accent : Colors.textDim
                                         Behavior on color {
@@ -552,7 +557,8 @@ Item {
                                     // Spinner
                                     Text {
                                         visible: netItem.isChanging
-                                        text: "󰑓"
+                                        text: "refresh"
+                                        font.family: "Material Symbols Rounded"
                                         font.pixelSize: Math.round(14 * UIScale.value)
                                         color: Colors.accent
                                         anchors.verticalCenter: parent.verticalCenter

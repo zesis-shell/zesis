@@ -8,13 +8,21 @@ import Quickshell.Io
 Singleton {
     id: root
 
+    readonly property string identityIcon: "memory"
+
     readonly property string _configDir: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/zesis"
     readonly property string _configPath: _configDir + "/sysmon.json"
 
     property bool desktopWidgetActive: false
     property bool popupOpen: false
     property bool panelOpen: false
+    property bool barAtomActive: false  // set by SysMonItem while it exists on the bar
     property int activeTab: 0  // 0=CPU, 1=Memory, 2=GPU, 3=Net, 4=Disk, 5=Settings
+
+    // athroisma only runs while something shows its data. The singleton
+    // outlives its widgets, so this must be explicit or the process keeps
+    // sampling after every consumer is gone.
+    readonly property bool wanted: desktopWidgetActive || popupOpen || panelOpen || barAtomActive
     property int pullRateMs: sysmonData.pullRateMs
     property int procLimit: sysmonData.procLimit
     property bool filterZero: sysmonData.filterZero
@@ -186,11 +194,20 @@ Singleton {
         proc.write("now " + tokens.join(" ") + "\n");
     }
 
+    // Start/stop follows `wanted`. On every start, re-send the sample interval
+    // and the current request, since a fresh athroisma knows neither.
+    function _onProcStarted() {
+        proc.write("interval " + pullRateMs + "\n");
+        sendRequest();
+    }
+
     Process {
         id: proc
-        running: true
+        running: root.wanted
         stdinEnabled: true
         command: ["athroisma", "cpu"]
+        onRunningChanged: if (running)
+            root._onProcStarted()
         stdout: SplitParser {
             onRead: data => {
                 try {

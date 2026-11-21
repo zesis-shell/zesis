@@ -223,7 +223,7 @@ Item {
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: ""
-                                        font.family: "Material Icons"
+                                        font.family: "Material Symbols Rounded"
                                         font.pixelSize: Math.round(28 * UIScale.value)
                                         color: Colors.withAlpha(Colors.text, 0.15)
                                     }
@@ -372,8 +372,8 @@ Item {
                             spacing: UIScale.spacingXs
 
                             Text {
-                                text: "󰺻"
-                                font.family: "Material Icons"
+                                text: "calendar_month"
+                                font.family: "Material Symbols Rounded"
                                 font.pixelSize: UIScale.fontBody
                                 color: Colors.accent
                             }

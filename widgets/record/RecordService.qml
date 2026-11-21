@@ -6,6 +6,8 @@ import Quickshell.Io
 Singleton {
     id: root
 
+    readonly property string identityIcon: "fiber_manual_record"
+
     readonly property bool recording: _recorder.running
     property int elapsed: 0
     property string lastFile: ""

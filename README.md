@@ -43,13 +43,14 @@ It's built for **Hyprland**, that's the only compositor backend implemented so f
 > [!TIP]
 > On Arch, the fastest path is:
 > ```sh
-> sudo pacman -S quickshell matugen nerd-fonts.symbols-only
+> sudo pacman -S quickshell matugen
 > ```
+> and install a Material Symbols Rounded font with ligature support (see below).
 
 - [Quickshell](https://quickshell.outfoxxed.me) (Qt 6)
 - [Matugen](https://github.com/InioX/matugen)
 - A Wayland compositor that implements `wlr-layer-shell`, in practice **Hyprland**, since it's the only compositor backend written so far.
-- A [Nerd Font](https://www.nerdfonts.com/) or the `nerd-fonts.symbols-only` package for icons.
+- The [Material Symbols](https://fonts.google.com/icons) font, the Rounded variant (family name "Material Symbols Rounded"). On Nix it's the `material-symbols` package, which the module and dev shell pull in for you.
 - One wallpaper-setting backend: [awww](https://codeberg.org/LGFae/awww) (default), [swww](https://codeberg.org/LGFae/awww), `hyprpaper`, `feh`, or a custom command, configurable in the Wallpaper settings panel.
 - `bash`, `curl`, `python3` - widgets shell out to these directly for core features: theming, weather, AirPods, the 3D globe's starfield generation.
 - A handful of standard desktop utilities most Linux systems already have: `bluez` (`bluetoothctl`, for Bluetooth/AirPods), `libnotify` (`notify-send`), `brightnessctl`, `slurp`, `xdg-utils` (`xdg-open`), `procps` (`pkill`, `pgrep`), `gawk`, `hostname`. On Nix, each module's `batteriesIncluded.enable = true;` puts all of these on the service's `PATH` for you, if you don't already have them - see [Nix](#nix).

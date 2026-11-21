@@ -70,7 +70,7 @@ Item {
 
                         Text {
                             text: ""
-                            font.family: "Material Icons"
+                            font.family: "Material Symbols Rounded"
                             font.pixelSize: Math.round(22 * UIScale.value)
                             color: Colors.accent
                         }

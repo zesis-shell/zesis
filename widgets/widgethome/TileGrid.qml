@@ -28,8 +28,8 @@ Item {
     readonly property real expandedW: root.width - 2 * pad
     readonly property real expandedH: contentArea.height
 
-    // Each entry: [label, icon codepoint (Material Icons), widgetIndex]
-    readonly property var layout: [[[I18n.t("widgethome.music"), "", 0], [I18n.t("widgethome.notifs"), "", 1]], [[I18n.t("widgethome.sound"), "", 2], [I18n.t("widgethome.scale"), "", 3]], [[I18n.t("widgethome.network"), "", 4], [I18n.t("widgethome.storage"), "", 5]]]
+    // Each entry: [label, icon codepoint (Material Symbols Rounded), widgetIndex]
+    readonly property var layout: [[[I18n.t("widgethome.music"), "music_note", 0], [I18n.t("widgethome.notifs"), "notifications", 1]], [[I18n.t("widgethome.sound"), "graphic_eq", 2], [I18n.t("widgethome.scale"), "aspect_ratio", 3]], [[I18n.t("widgethome.network"), "wifi", 4], [I18n.t("widgethome.storage"), "pie_chart", 5]]]
 
     readonly property var widgetComponents: [musicComp, notifComp, soundComp, configComp, networkComp, storageComp]
     Component {
@@ -102,8 +102,8 @@ Item {
 
             Text {
                 anchors.centerIn: parent
-                text: ""
-                font.family: "Material Icons"
+                text: "fullscreen"
+                font.family: "Material Symbols Rounded"
                 font.pixelSize: Math.round((expandMouseAreaBtn.containsMouse ? 20 : 16) * UIScale.value)
                 color: expandMouseAreaBtn.containsMouse ? Colors.accent : Colors.muted
                 Behavior on color {
@@ -448,7 +448,7 @@ Item {
                                             Text {
                                                 text: btn.icon
                                                 color: Colors.bg
-                                                font.family: "Material Icons"
+                                                font.family: "Material Symbols Rounded"
                                                 font.pixelSize: Math.round(19 * UIScale.value)
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
@@ -477,7 +477,7 @@ Item {
                                         Text {
                                             text: btn.icon
                                             color: Colors.bg
-                                            font.family: "Material Icons"
+                                            font.family: "Material Symbols Rounded"
                                             font.pixelSize: Math.round(20 * UIScale.value)
                                             anchors.verticalCenter: parent.verticalCenter
                                         }

@@ -7,6 +7,8 @@ import "../../"
 Singleton {
     id: root
 
+    readonly property string identityIcon: "partly_cloudy_day"
+
     readonly property string _configDir: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/zesis"
     readonly property string _configPath: _configDir + "/weather.json"
 
@@ -52,28 +54,31 @@ Singleton {
         _writeConfig(root.locationMode, city);
     }
 
+    // Current-conditions icon, shared by the bar item and every weather view.
+    readonly property string icon: weatherIcon(weatherCode, isDay)
+
     function weatherIcon(code, day) {
         if (code === 0)
-            return day ? "󰖙" : "󰖔";       // sunny / clear night
+            return day ? "wb_sunny" : "brightness_3";           // sunny / clear night
         if (code <= 2)
-            return day ? "󰖕" : "󰖔";       // partly cloudy / clear night
+            return day ? "wb_cloudy" : "brightness_3";          // partly cloudy / clear night
         if (code === 3)
-            return "󰖐";                    // overcast
+            return "cloud";                                     // overcast
         if (code <= 48)
-            return "󰖑";                    // fog
+            return "dehaze";                                    // fog
         if (code <= 57)
-            return "󰖗";                    // drizzle (rainy, light)
+            return "grain";                                     // drizzle
         if (code <= 67)
-            return "󰖖";                    // rain (pouring)
+            return "invert_colors";                             // rain (pouring)
         if (code <= 77)
-            return "󰖘";                    // snow
+            return "ac_unit";                                   // snow
         if (code <= 82)
-            return "󰖗";                    // rain showers
+            return "grain";                                     // rain showers
         if (code <= 86)
-            return "󰖘";                    // snow showers
+            return "ac_unit";                                   // snow showers
         if (code === 95)
-            return "󰖓";                    // thunderstorm
-        return "󰖒";                        // thunderstorm with hail
+            return "flash_on";                                  // thunderstorm
+        return "ac_unit";                                       // thunderstorm with hail
     }
 
     function conditionText(code) {

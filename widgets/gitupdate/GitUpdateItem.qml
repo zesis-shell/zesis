@@ -15,7 +15,7 @@ BarButton {
     property bool justSucceeded: false
 
     visible: available
-    icon: "󰚰"
+    icon: GitUpdateService.icon
     active: popup.visible
     onClicked: popup.visible ? popup.close() : popup.open()
 
@@ -72,7 +72,8 @@ BarButton {
                     spacing: UIScale.spacingSm
 
                     Text {
-                        text: root.justSucceeded ? "✓" : "󰚰"
+                        text: root.justSucceeded ? "check" : GitUpdateService.icon
+                        font.family: "Material Symbols Rounded"
                         font.pixelSize: Math.round(20 * UIScale.value)
                         color: root.blocked ? "#e0a25c" : Colors.accent
                     }

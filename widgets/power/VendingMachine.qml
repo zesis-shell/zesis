@@ -51,28 +51,28 @@ Item {
                 row: 1,
                 col: 1,
                 key: "lock",
-                icon: "󰌾",
+                icon: "lock",
                 label: I18n.t("power.lock").toUpperCase()
             },
             {
                 row: 2,
                 col: 3,
                 key: "logout",
-                icon: "󰍃",
+                icon: "logout",
                 label: I18n.t("power.logOut").toUpperCase()
             },
             {
                 row: 4,
                 col: 2,
                 key: "reboot",
-                icon: "󰜉",
+                icon: "restart_alt",
                 label: I18n.t("power.reboot").toUpperCase()
             },
             {
                 row: 5,
                 col: 4,
                 key: "shutdown",
-                icon: "󰐥",
+                icon: "power_settings_new",
                 label: I18n.t("power.shutDown").toUpperCase()
             }
         ];
@@ -506,6 +506,7 @@ Item {
                                 horizontalAlignment: Text.AlignHCenter
                                 wrapMode: Text.WordWrap
                                 text: cell.modelData.real ? cell.modelData.icon : cell.modelData.label
+                                font.family: cell.modelData.real ? "Material Symbols Rounded" : ""
                                 color: cell.modelData.real ? Colors.accent : Colors.textDim
                                 font.pixelSize: cell.modelData.real ? Math.round(15 * UIScale.value) : Math.round(6.5 * UIScale.value)
                                 font.weight: Font.DemiBold
@@ -534,6 +535,7 @@ Item {
                         Text {
                             anchors.centerIn: parent
                             text: root.selectedSlot ? root.selectedSlot.icon : ""
+                            font.family: "Material Symbols Rounded"
                             color: Colors.accent
                             font.pixelSize: Math.round(16 * UIScale.value)
                         }
