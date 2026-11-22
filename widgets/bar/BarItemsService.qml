@@ -16,7 +16,7 @@ import "../bluetooth"
 import "../wifi"
 import "../weather"
 import "../notifications"
-import "../airpods"
+import "../audiodevices/airpods"
 import "../record"
 import "../sysmon"
 import "../taskbar"
@@ -99,7 +99,7 @@ Singleton {
             desc: I18n.t("bar.descAirpods"),
             icon: AirPodsService.identityIcon,
             category: "system",
-            src: "../airpods/AirPods.qml"
+            src: "../audiodevices/airpods/AirPods.qml"
         },
         {
             id: "wifi",

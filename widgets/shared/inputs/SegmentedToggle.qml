@@ -29,7 +29,34 @@ Item {
         root._segmentRects = next;
     }
 
-    readonly property var _currentRect: (root.currentIndex >= 0 && root._segmentRects[root.currentIndex]) ? root._segmentRects[root.currentIndex] : null
+    // The knob position is animated in segment units, and its pixel rect is derived
+    // from the live segment rects. A window resize therefore moves the knob at once
+    // instead of animating it toward the new geometry.
+    property real _knobPos: root.currentIndex
+    Behavior on _knobPos {
+        NumberAnimation {
+            duration: Anim.medium
+            easing.type: Easing.InOutQuad
+        }
+    }
+
+    function _knobRectAt(p) {
+        const rs = root._segmentRects;
+        if (root.currentIndex < 0 || rs.length === 0)
+            return null;
+        const i = Math.floor(p);
+        const f = p - i;
+        const a = rs[Math.max(0, Math.min(rs.length - 1, i))];
+        const b = rs[Math.max(0, Math.min(rs.length - 1, i + 1))];
+        if (!a || !b)
+            return null;
+        return {
+            x: a.x + (b.x - a.x) * f,
+            width: a.width + (b.width - a.width) * f
+        };
+    }
+
+    readonly property var _currentRect: _knobRectAt(root._knobPos)
 
     Surface {
         anchors.fill: parent
@@ -45,18 +72,6 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         x: root._currentRect ? root._currentRect.x + root._knobMargin : 0
         color: Colors.accent
-        Behavior on x {
-            NumberAnimation {
-                duration: Anim.medium
-                easing.type: Easing.InOutQuad
-            }
-        }
-        Behavior on width {
-            NumberAnimation {
-                duration: Anim.medium
-                easing.type: Easing.InOutQuad
-            }
-        }
     }
 
     RowLayout {

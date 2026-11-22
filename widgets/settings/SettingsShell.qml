@@ -9,6 +9,7 @@ import "../workspaceindicator"
 import "../workspaceindicator/disc"
 import "../display"
 import "../bluetooth"
+import "../audiodevices/airpods"
 import "../wifi"
 import "../sound"
 import "../mic"
@@ -123,6 +124,15 @@ IndexedPanelShell {
                     component: bluetoothPanelComp,
                     files: ["bluetooth/BluetoothPanel.qml"]
                 },
+                ...(AirPodsSettings.everSeen || AirPodsService.connected ? [
+                        {
+                            id: "airpods",
+                            icon: AirPodsService.identityIcon,
+                            label: I18n.t("settings_chrome.navAirpods"),
+                            component: airpodsPanelComp,
+                            files: ["audiodevices/airpods/AirPodsPanel.qml"]
+                        }
+                    ] : []),
                 {
                     id: "wifi",
                     icon: WifiService.identityIcon,
@@ -182,6 +192,10 @@ IndexedPanelShell {
     Component {
         id: bluetoothPanelComp
         BluetoothPanel {}
+    }
+    Component {
+        id: airpodsPanelComp
+        AirPodsPanel {}
     }
     Component {
         id: wifiPanelComp

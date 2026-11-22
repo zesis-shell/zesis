@@ -2,13 +2,15 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import "../../"
-import "../bar"
+import "../"
+import "../../../"
+import "../../bar"
 
 Item {
     id: root
 
     readonly property bool available: AirPodsService.connected
+
     visible: available
     implicitWidth: available ? pill.implicitWidth : 0
     implicitHeight: Math.round(30 * UIScale.value)
@@ -34,7 +36,7 @@ Item {
             spacing: Math.round(5 * UIScale.value)
 
             Text {
-                text: "headset"
+                text: AirPodsService.stateIcon
                 font.family: "Material Symbols Rounded"
                 font.pixelSize: Math.round(14 * UIScale.value)
                 color: Colors.accent
@@ -204,7 +206,7 @@ Item {
                     spacing: UIScale.spacingSm
 
                     Text {
-                        text: "headset"
+                        text: AirPodsService.identityIcon
                         font.family: "Material Symbols Rounded"
                         font.pixelSize: Math.round(22 * UIScale.value)
                         color: Colors.accent
@@ -250,6 +252,7 @@ Item {
                 BatteryRow {
                     Layout.fillWidth: true
                     label: I18n.t("airpods.left")
+                    icon: "earbud_left"
                     level: AirPodsService.leftLevel
                     charging: AirPodsService.leftCharging
                     inEar: AirPodsService.leftEar
@@ -258,6 +261,7 @@ Item {
                 BatteryRow {
                     Layout.fillWidth: true
                     label: I18n.t("airpods.right")
+                    icon: "earbud_right"
                     level: AirPodsService.rightLevel
                     charging: AirPodsService.rightCharging
                     inEar: AirPodsService.rightEar
@@ -266,6 +270,7 @@ Item {
                 BatteryRow {
                     Layout.fillWidth: true
                     label: I18n.t("airpods.case")
+                    icon: "earbud_case"
                     level: AirPodsService.caseLevel
                     charging: AirPodsService.caseCharging
                     inEar: true
@@ -274,89 +279,6 @@ Item {
 
                 Item {
                     implicitHeight: UIScale.spacingXs
-                }
-            }
-        }
-    }
-
-    // battery row component
-
-    component BatteryRow: ColumnLayout {
-        property string label: ""
-        property int level: 0
-        property bool charging: false
-        property bool inEar: true
-
-        spacing: Math.round(3 * UIScale.value)
-
-        RowLayout {
-            Layout.fillWidth: true
-
-            Text {
-                text: parent.parent.label
-                color: parent.parent.inEar ? Colors.text : Colors.textDim
-                font.pixelSize: UIScale.fontTiny
-                font.weight: Font.Medium
-                Layout.fillWidth: true
-                Behavior on color {
-                    ColorAnimation {
-                        duration: Anim.fast
-                    }
-                }
-            }
-
-            Text {
-                visible: parent.parent.charging
-                text: "flash_on"
-                font.family: "Material Symbols Rounded"
-                font.pixelSize: UIScale.fontTiny
-                color: Colors.accent
-                Layout.rightMargin: Math.round(2 * UIScale.value)
-            }
-
-            Text {
-                text: parent.parent.level + "%"
-                color: parent.parent.charging ? Colors.accent : Colors.text
-                font.pixelSize: UIScale.fontTiny
-                font.weight: Font.DemiBold
-                font.family: "monospace"
-                Behavior on color {
-                    ColorAnimation {
-                        duration: Anim.fast
-                    }
-                }
-            }
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            implicitHeight: Math.round(4 * UIScale.value)
-            radius: 2
-            color: Colors.surfaceHigh
-
-            Rectangle {
-                width: parent.width * (parent.parent.level / 100)
-                height: parent.height
-                radius: parent.radius
-                color: {
-                    if (parent.parent.charging)
-                        return Colors.accent;
-                    if (parent.parent.level <= 15)
-                        return "#e05c5c";
-                    if (parent.parent.level <= 30)
-                        return "#e0a85c";
-                    return Colors.accent;
-                }
-                Behavior on width {
-                    NumberAnimation {
-                        duration: Anim.slow
-                        easing.type: Easing.OutCubic
-                    }
-                }
-                Behavior on color {
-                    ColorAnimation {
-                        duration: Anim.fast
-                    }
                 }
             }
         }
