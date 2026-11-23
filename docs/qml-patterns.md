@@ -72,7 +72,7 @@ self-reported state.
 
 ## 2. Container-aware (responsive) widgets
 
-Several widgets (`WeatherDisplay`, `WeatherReport`, `PanelHeader`, `SysTray`) size or
+Several widgets (`WeatherReport`, `PanelHeader`, `SysTray`) size or
 reflow themselves based on the space they're actually given, rather than the screen or a
 guessed constant. Two rules keep this from becoming circular or arbitrary:
 
