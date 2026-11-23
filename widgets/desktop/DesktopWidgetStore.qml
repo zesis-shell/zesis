@@ -10,66 +10,160 @@ Singleton {
 
     property bool configMode: false
 
-    // Ordered list of active widget keys, Instantiator in shell.qml watches this.
+    // Ordered list of active widget keys.
     property var enabledKeys: []
+    onEnabledKeysChanged: root._syncEnabledModel()
 
-    // { "key": { nx: 0.0-1.0, ny: 0.0-1.0, bg: BgConfig } }
-    property var _positions: ({})
+    // Mirror of enabledKeys that the desktop windows (shell.qml) and the overlay proxies
+    // iterate. It is updated by diffing, so only the keys that came or went are created
+    // or destroyed. Handing a delegate model a new JS array rebuilds every delegate,
+    // which tore down every cava instance and restarted the cava process on each change.
+    readonly property ListModel enabledModel: ListModel {}
 
-    // [{ key: string, component: Component }] fed to DesktopConfigOverlay's Repeater
-    property var _widgets: []
-
-    function register(key, component) {
-        var arr = _widgets.filter(w => w.key !== key);
-        arr.push({
-            key: key,
-            component: component
-        });
-        _widgets = arr;
+    function _syncEnabledModel() {
+        var want = root.enabledKeys;
+        for (var i = root.enabledModel.count - 1; i >= 0; i--) {
+            if (want.indexOf(root.enabledModel.get(i).widgetKey) === -1)
+                root.enabledModel.remove(i);
+        }
+        for (var j = 0; j < want.length; j++) {
+            var found = -1;
+            for (var m = j; m < root.enabledModel.count; m++) {
+                if (root.enabledModel.get(m).widgetKey === want[j]) {
+                    found = m;
+                    break;
+                }
+            }
+            if (found === -1)
+                root.enabledModel.insert(j, {
+                    widgetKey: want[j]
+                });
+            else if (found !== j)
+                root.enabledModel.move(found, j, 1);
+        }
     }
 
-    function unregister(key) {
-        _widgets = _widgets.filter(w => w.key !== key);
+    // { "key": { x, y, size, skew, bg } }
+    //   x, y: top-left as a 0..1 fraction of the screen (see fractionFor)
+    //   size: { w, h } in reference pixels, 0 = auto
+    // An entry may carry nx/ny (slack ratios) instead of x/y. fractionFor reads both.
+    property var _positions: ({})
+
+    // Every widget is laid out in reference pixels, then drawn at scaleFor(screen).
+    // The reference is 3840x2160, so at that resolution the scale is 1. Any other resolution scales
+    // the whole widget uniformly, keeping its proportions and place on screen.
+    readonly property real refWidth: 3840
+    readonly property real refHeight: 2160
+
+    function scaleFor(screenW, screenH) {
+        if (!(screenW > 0) || !(screenH > 0))
+            return 1;
+        return Math.min(screenW / refWidth, screenH / refHeight);
+    }
+
+    // The box a widget occupies on screen, and how its content is drawn inside it.
+    // natW/natH: natural footprint in ref px (content + bg padding).
+    // ovW/ovH: the allocated box in ref px, 0 = auto on that axis.
+    // padC: bg padding in ref px. fill: the content reflows to whatever size it is given
+    // (fillsBox), so it is laid out at real px and not scaled.
+    // Otherwise the content is scaled uniformly to fit the box, and a bigger box means
+    // bigger content. The box is centred on the footprint when the aspect ratios differ.
+    // Auto on both axes keeps the plain screen scale.
+    // Returns { fill, s, w, h, dx, dy, pad, cw, ch }: w/h the box in screen px, s the
+    // content scale, dx/dy the footprint offset in the box, pad the bg padding in screen px,
+    // cw/ch the content box in screen px (fill mode only).
+    function boxFor(natW, natH, ovW, ovH, padC, screenW, screenH, fill) {
+        var k = scaleFor(screenW, screenH);
+        var bw = ovW > 0 ? ovW * screenW / refWidth : 0;
+        var bh = ovH > 0 ? ovH * screenH / refHeight : 0;
+        if (fill) {
+            var pad = padC * k;
+            var fw = bw > 0 ? bw : natW * k;
+            var fh = bh > 0 ? bh : natH * k;
+            return {
+                fill: true,
+                s: 1,
+                w: Math.round(fw),
+                h: Math.round(fh),
+                dx: 0,
+                dy: 0,
+                pad: pad,
+                cw: Math.round(fw) - 2 * pad,
+                ch: Math.round(fh) - 2 * pad
+            };
+        }
+        var sx = (bw > 0 && natW > 0) ? bw / natW : Infinity;
+        var sy = (bh > 0 && natH > 0) ? bh / natH : Infinity;
+        var s = Math.min(sx, sy);
+        if (s === Infinity)
+            s = k;
+        var w = bw > 0 ? bw : natW * s;
+        var h = bh > 0 ? bh : natH * s;
+        return {
+            fill: false,
+            s: s,
+            w: Math.round(w),
+            h: Math.round(h),
+            dx: (w - natW * s) / 2,
+            dy: (h - natH * s) / 2,
+            pad: padC * s,
+            cw: 0,
+            ch: 0
+        };
     }
 
     readonly property string _configDir: (Quickshell.env("XDG_CACHE_HOME") || (Quickshell.env("HOME") + "/.cache")) + "/zesis"
     readonly property string _path: _configDir + "/desktop-widgets.json"
+    readonly property string _historyPath: _configDir + "/desktop-widgets-history.json"
     readonly property string _bgCacheDir: _configDir + "/bg"
 
-    function getPos(key) {
+    // Top-left of a widget as a 0..1 fraction of the screen. cw/ch are its
+    // footprint in reference pixels (content + bg padding). Entries with nx/ny hold a
+    // slack ratio of (refW - cw) and resolve against the reference canvas, so they
+    // land where the same ratio puts them on the 3840x2160 layout.
+    function fractionFor(key, cw, ch) {
         var p = _positions[key];
+        if (p && p.x !== undefined && p.y !== undefined)
+            return {
+                x: p.x,
+                y: p.y
+            };
+        var nx = p?.nx ?? 0.5;
+        var ny = p?.ny ?? 0.5;
         return {
-            nx: (p?.nx ?? 0.5),
-            ny: (p?.ny ?? 0.5)
+            x: nx * Math.max(0, refWidth - cw) / refWidth,
+            y: ny * Math.max(0, refHeight - ch) / refHeight
         };
     }
 
-    function setPos(key, nx, ny) {
+    function setPos(key, x, y) {
         _coalesceTag = "";
-        var copy = Object.assign({}, _positions);
-        copy[key] = Object.assign({}, copy[key] || {}, {
-            nx: Math.max(0.0, Math.min(1.0, nx)),
-            ny: Math.max(0.0, Math.min(1.0, ny))
-        });
-        _positions = copy;
+        _writePos(key, x, y);
         _save();
+    }
+
+    function _writePos(key, x, y) {
+        var copy = Object.assign({}, _positions);
+        var entry = Object.assign({}, copy[key] || {}, {
+            x: Math.max(0.0, Math.min(1.0, x)),
+            y: Math.max(0.0, Math.min(1.0, y))
+        });
+        delete entry.nx;
+        delete entry.ny;
+        copy[key] = entry;
+        _positions = copy;
     }
 
     // We fold rapid taps into one move
     property real _coalesceUntil: 0
     property string _coalesceTag: ""
 
-    function setPosCoalesced(key, nx, ny, tag) {
+    function setPosCoalesced(key, x, y, tag) {
         var now = Date.now();
         var fold = (tag !== "" && tag === _coalesceTag && now < _coalesceUntil);
         _coalesceUntil = now + 450;
         _coalesceTag = tag;
-        var copy = Object.assign({}, _positions);
-        copy[key] = Object.assign({}, copy[key] || {}, {
-            nx: Math.max(0.0, Math.min(1.0, nx)),
-            ny: Math.max(0.0, Math.min(1.0, ny))
-        });
-        _positions = copy;
+        _writePos(key, x, y);
         if (fold)
             _quietSave();
         else
@@ -87,10 +181,7 @@ Singleton {
 
     function setSize(key, w, h) {
         var copy = Object.assign({}, _positions);
-        copy[key] = Object.assign({}, copy[key] || {
-            nx: 0.5,
-            ny: 0.5
-        }, {
+        copy[key] = Object.assign({}, copy[key] || {}, {
             size: {
                 w: Math.max(0, Math.round(w || 0)),
                 h: Math.max(0, Math.round(h || 0))
@@ -129,10 +220,7 @@ Singleton {
         var cur = getSkew(key);
         var next = Object.assign({}, cur, patch);
         var copy = Object.assign({}, _positions);
-        copy[key] = Object.assign({}, copy[key] || {
-            nx: 0.5,
-            ny: 0.5
-        }, {
+        copy[key] = Object.assign({}, copy[key] || {}, {
             skew: next
         });
         _positions = copy;
@@ -245,10 +333,7 @@ Singleton {
                 cachedImagePath: ""
             });
         var copy = Object.assign({}, _positions);
-        copy[key] = Object.assign({}, copy[key] || {
-            nx: 0.5,
-            ny: 0.5
-        }, {
+        copy[key] = Object.assign({}, copy[key] || {}, {
             bg: config
         });
         _positions = copy;
@@ -317,6 +402,16 @@ Singleton {
         _save();
     }
 
+    // Drop from the widget menu: place at (x, y) and enable, as one undo step.
+    // Works for an already enabled widget too, which then just moves.
+    function placeWidget(key, x, y) {
+        _coalesceTag = "";
+        _writePos(key, x, y);
+        if (enabledKeys.indexOf(key) === -1)
+            enabledKeys = enabledKeys.concat([key]);
+        _save();
+    }
+
     function disableWidget(key) {
         enabledKeys = enabledKeys.filter(k => k !== key);
         _save();
@@ -336,6 +431,27 @@ Singleton {
     readonly property int _histLimit: 200
     readonly property bool canUndo: _undo.length > 0
     readonly property bool canRedo: _redo.length > 0
+
+    // The stacks are also written to their own file, so they survive closing the overlay and a
+    // shell restart. The file records the layout they were taken from, and a history whose layout
+    // no longer matches the file is dropped on load.
+    function _persistHistory() {
+        histFile.setText(JSON.stringify({
+            current: root._baseline,
+            undo: root._undo,
+            redo: root._redo
+        }));
+    }
+
+    function _loadHistory(text) {
+        try {
+            var obj = JSON.parse(text) || {};
+            if (obj.current === root._baseline && Array.isArray(obj.undo) && Array.isArray(obj.redo)) {
+                root._undo = obj.undo;
+                root._redo = obj.redo;
+            }
+        } catch (_) {}
+    }
 
     signal historyRestored
 
@@ -367,6 +483,7 @@ Singleton {
         var s = _undo[_undo.length - 1];
         _undo = _undo.slice(0, -1);
         _applySnapshot(s);
+        root._persistHistory();
     }
 
     function redo() {
@@ -376,18 +493,23 @@ Singleton {
         var s = _redo[_redo.length - 1];
         _redo = _redo.slice(0, -1);
         _applySnapshot(s);
+        root._persistHistory();
     }
 
     function _save() {
         var s = _serialize();
         posFile.setText(s);
+        var pushed = false;
         if (!_restoring && _baseline !== "" && s !== _baseline) {
             _undo = _undo.concat([_baseline]);
             if (_undo.length > _histLimit)
                 _undo = _undo.slice(-_histLimit);
             _redo = [];
+            pushed = true;
         }
         _baseline = s;
+        if (pushed)
+            _persistHistory();
     }
 
     function _quietSave() {
@@ -405,7 +527,7 @@ Singleton {
         try {
             var obj = JSON.parse(text) || {};
             var positions = obj.positions || {};
-            // Migrate old boolean bg to config object
+            // Boolean bg values are converted to the config object.
             Object.keys(positions).forEach(function (k) {
                 var p = positions[k];
                 if (p && typeof p.bg === 'boolean')
@@ -419,6 +541,17 @@ Singleton {
         root._baseline = root._serialize();
     }
 
+    // Set while reloadFromDisk() is re-reading the file, see there.
+    property bool _externalReload: false
+
+    // Something else wrote the file (a profile apply copies it over). Re-read it, drop the undo
+    // history (its states describe a layout that is no longer on disk), and tell the overlay's
+    // proxies to rebind to the new positions.
+    function reloadFromDisk() {
+        root._externalReload = true;
+        posFile.reload();
+    }
+
     FileView {
         id: posFile
         path: root._path
@@ -426,10 +559,29 @@ Singleton {
         printErrors: false
         watchChanges: true
         onFileChanged: reload()
-        onLoaded: root._load(posFile.text())
+        onLoaded: {
+            root._load(posFile.text());
+            if (root._externalReload) {
+                root._externalReload = false;
+                root._undo = [];
+                root._redo = [];
+                root._persistHistory();
+                root.historyRestored();
+            }
+        }
+        // A failed re-read must not leave the flag set, or the next external edit would wipe history.
+        onLoadFailed: root._externalReload = false
+    }
+
+    FileView {
+        id: histFile
+        path: root._historyPath
+        blockLoading: true
+        printErrors: false
     }
 
     Component.onCompleted: {
         _load(posFile.text());
+        _loadHistory(histFile.text());
     }
 }

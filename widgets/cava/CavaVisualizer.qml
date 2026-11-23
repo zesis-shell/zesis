@@ -64,6 +64,10 @@ Item {
     // Once teardown is complete, we can downsize to a 1x1 to save on VRAM
     readonly property bool wantsMinimalSize: root._autoHidden && !root._loadersActive
 
+    // The desktop surface lays this out at its real box size instead of scaling it
+    // (see DesktopWidgetStore.boxFor). The bars follow width and height.
+    readonly property bool fillsBox: true
+
     function _reveal() {
         root._autoHidden = false;
         root._loadersActive = true;

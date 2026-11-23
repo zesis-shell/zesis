@@ -19,9 +19,6 @@ PanelWindow {
     property string storeKey: ""
     property Component content: null
 
-    property real _nx: 0.5
-    property real _ny: 0.5
-
     // Reactive bg config, re-evaluates whenever _positions changes.
     property var _bgConfig: {
         var _ = DesktopWidgetStore._positions;
@@ -30,9 +27,9 @@ PanelWindow {
     property bool _hasBg: _bgConfig.enabled
     readonly property real _bgPad: _hasBg ? Math.round(10 * UIScale.value) : 0
 
-    // User-set fixed size, independent per axis. 0 = auto (content's own implicit size).
-    // Forcing a size here is what lets a container-aware component (e.g. WeatherDisplay)
-    // actually reflow instead of just being centered at its natural size in a bigger window.
+    // User-set fixed size in ref px, independent per axis. 0 = auto (content's own implicit size).
+    // Forcing a size here is what lets a fillsBox component (cava) reflow to the box
+    // instead of sitting at its natural size inside a bigger one.
     property var _size: {
         var _ = DesktopWidgetStore._positions;
         return DesktopWidgetStore.getSize(root.storeKey);
@@ -40,8 +37,27 @@ PanelWindow {
     readonly property bool _overrideW: _size.w > 0
     readonly property bool _overrideH: _size.h > 0
 
-    property real _marginLeft: _nx * Math.max(0, screen.width - implicitWidth)
-    property real _marginTop: _ny * Math.max(0, screen.height - implicitHeight)
+    // Natural footprint in ref px (content + bg padding). The reference footprint is the
+    // fixed size when one is set, otherwise the natural size. fractionFor resolves stored
+    // positions against it.
+    readonly property real _natW: (contentLoader.item?.implicitWidth ?? 0) + root._bgPad * 2
+    readonly property real _natH: (contentLoader.item?.implicitHeight ?? 0) + root._bgPad * 2
+    readonly property real _refW: (root._overrideW ? root._size.w : (contentLoader.item?.implicitWidth ?? 0)) + root._bgPad * 2
+    readonly property real _refH: (root._overrideH ? root._size.h : (contentLoader.item?.implicitHeight ?? 0)) + root._bgPad * 2
+
+    // Screen box and content scale, see DesktopWidgetStore.boxFor. Not affected by the
+    // 1x1 minimal-size trick below, so the position doesn't jump when the widget wakes up.
+    // fillsBox content (cava) reflows to the box, everything else scales to fit it.
+    readonly property bool _fillsBox: contentLoader.item?.fillsBox ?? false
+    readonly property var _box: DesktopWidgetStore.boxFor(root._natW, root._natH, root._overrideW ? root._size.w : 0, root._overrideH ? root._size.h : 0, root._bgPad, screen.width, screen.height, root._fillsBox)
+
+    // Top-left as a screen fraction, clamped so the widget stays on screen.
+    readonly property var _frac: {
+        var _ = DesktopWidgetStore._positions;
+        return DesktopWidgetStore.fractionFor(root.storeKey, root._refW, root._refH);
+    }
+    readonly property real _marginLeft: Math.max(0, Math.min(root._frac.x * screen.width, screen.width - root._box.w))
+    readonly property real _marginTop: Math.max(0, Math.min(root._frac.y * screen.height, screen.height - root._box.h))
 
     WlrLayershell.layer: WlrLayer.Bottom
     WlrLayershell.namespace: "zesis:desktop:" + storeKey
@@ -58,8 +74,8 @@ PanelWindow {
     // This is used for the 1x1 trick to save on VRAM (cava)
     readonly property bool _wantsMinimalSize: contentLoader.item?.wantsMinimalSize ?? false
 
-    implicitWidth: root._wantsMinimalSize ? 1 : (root._overrideW ? root._size.w : contentLoader.implicitWidth) + root._bgPad * 2
-    implicitHeight: root._wantsMinimalSize ? 1 : (root._overrideH ? root._size.h : contentLoader.implicitHeight) + root._bgPad * 2
+    implicitWidth: root._wantsMinimalSize ? 1 : root._box.w
+    implicitHeight: root._wantsMinimalSize ? 1 : root._box.h
 
     exclusiveZone: -1
     color: "transparent"
@@ -102,36 +118,22 @@ PanelWindow {
             bgConfig: root._bgConfig
         }
 
-        // width/height stay bound always, see docs/qml-patterns.md #2 for why
+        // Fit mode: drawn at natural size, scaled to fit the box (see _box). Fill mode:
+        // laid out at the box's real size, no scale. Either way it is centred in the box,
+        // offset by the bg padding. width/height stay bound always, see
+        // docs/qml-patterns.md #2 for why
         Loader {
             id: contentLoader
-            anchors.centerIn: parent
+            x: root._box.dx + root._box.pad
+            y: root._box.dy + root._box.pad
+            transformOrigin: Item.TopLeft
+            scale: root._box.s
             sourceComponent: root.content
-            width: root._overrideW ? root._size.w : (item?.implicitWidth ?? 0)
-            height: root._overrideH ? root._size.h : (item?.implicitHeight ?? 0)
+            width: root._box.fill ? root._box.cw : (item?.implicitWidth ?? 0)
+            height: root._box.fill ? root._box.ch : (item?.implicitHeight ?? 0)
         }
     }
 
-    // Re-read position from store when config mode exits (overlay may have moved us).
-    Connections {
-        target: DesktopWidgetStore // qmllint disable incompatible-type
-        function onConfigModeChanged() {
-            if (!DesktopWidgetStore.configMode) {
-                var pos = DesktopWidgetStore.getPos(root.storeKey);
-                root._nx = pos.nx;
-                root._ny = pos.ny;
-            }
-        }
-    }
-
-    Component.onCompleted: {
-        var pos = DesktopWidgetStore.getPos(root.storeKey);
-        root._nx = pos.nx;
-        root._ny = pos.ny;
-        DesktopWidgetStore.register(root.storeKey, root.content);
-    }
-
-    Component.onDestruction: {
-        DesktopWidgetStore.unregister(root.storeKey);
-    }
+    // Position is reactive to the store, so when config mode exits and the overlay
+    // has moved us, the margins already reflect it.
 }

@@ -287,11 +287,11 @@ Scope {
     DesktopConfigOverlay {}
 
     Instantiator {
-        model: DesktopWidgetStore.enabledKeys
+        model: DesktopWidgetStore.enabledModel
         delegate: DesktopWidget {
-            required property string modelData
-            storeKey: modelData
-            content: DesktopWidgetCatalog.componentFor(modelData)
+            required property string widgetKey
+            storeKey: widgetKey
+            content: DesktopWidgetCatalog.componentFor(widgetKey)
         }
     }
 

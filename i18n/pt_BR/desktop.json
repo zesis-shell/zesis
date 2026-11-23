@@ -66,5 +66,18 @@
   "snap": "Encaixar",
   "undo": "Desfazer",
   "redo": "Refazer",
-  "done": "Concluído"
+  "done": "Concluído",
+  "gridStyle": "Estilo",
+  "gridStyleDots": "Pontos",
+  "gridStyleLines": "Linhas",
+  "gridStyleBoth": "Ambos",
+  "gridOpacity": "Opacidade",
+  "gridSpacing": "Espaçamento",
+  "gridPresetFine": "Fino",
+  "gridPresetMedium": "Médio",
+  "gridPresetCoarse": "Grosso",
+  "gridPresetManual": "Manual",
+  "gridStyleNone": "Nenhum",
+  "gridColumns": "Colunas",
+  "gridRows": "Fileiras"
 }

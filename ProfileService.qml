@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "widgets/desktop"
 
 // Named snapshots of the whole visual setup (WELCOME TO THE RICE FIELDS)
 Singleton {
@@ -139,6 +140,8 @@ Singleton {
         var script = root._copyLines(profileDir, !!e.includesTheme, true).join("; ");
         root._run("apply", script, function () {
             root.activeSlug = slug;
+            // The desktop store holds its own copy of desktop-widgets.json, so re-read it.
+            DesktopWidgetStore.reloadFromDisk();
             if (e.includesTheme)
                 ThemeState.reloadAndReapply();
         });

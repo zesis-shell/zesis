@@ -28,14 +28,24 @@ PanelWindow {
     visible: DesktopWidgetStore.configMode
     onVisibleChanged: {
         if (!visible) {
+            root.snapMenuOpen = false;
             root.selectedKey = "";
             root._lastMovedKey = "";
+            root._entryKey = "";
+            root._widgetDragging = false;
+            root._overMenu = false;
             root._fileDialogOpen = false;
         }
     }
 
-    property bool snapEnabled: true
+    // Saved with the grid settings, so it survives a shell restart.
+    readonly property bool snapEnabled: DesktopGridSettings.snapEnabled
+    // The Snap submenu (grid style, opacity, spacing), opened from the chevron beside Snap.
+    property bool snapMenuOpen: false
     readonly property real snapThreshold: 20
+    // Half-width of a grid line's snap band, as a share of its cell (see _gridSnapBand).
+    readonly property real _gridBandShare: 0.15
+
 
     property bool skewSnapEnabled: true
 
@@ -43,6 +53,134 @@ PanelWindow {
 
     // Arrow key target
     property string _lastMovedKey: ""
+
+    // Widget menu drag state. _entryKey is set while an entry is dragged out of the
+    // menu, _widgetDragging while an enabled widget is dragged on the desktop. Either
+    // one pins the menu open, _overMenu says the pointer is over it (a drop there
+    // removes the widget, or cancels an entry drag).
+    property string _entryKey: ""
+    property string _entryLabel: ""
+    property var _entryComponent: null
+    property real _ghostX: 0
+    property real _ghostY: 0
+    property real _ghostGrabX: 0
+    property real _ghostGrabY: 0
+    property bool _widgetDragging: false
+    property bool _overMenu: false
+    // The item being dragged (the ghost or a proxy), and the last pointer position.
+    property var _dragItem: null
+    property real _pointerX: 0
+    property real _pointerY: 0
+
+    // While dragging, the menu opens only when the pointer or the dragged widget comes within
+    // _nearPx of the list. Hovering it still opens it. Tune the distance here.
+    readonly property real _nearPx: Math.round(160 * UIScale.value)
+    readonly property bool _dragging: root._entryKey !== "" || root._widgetDragging
+    // The menu is a movable panel. Its position is a screen fraction stored under "widget-menu"
+    // with the widget positions (so it is undoable and resolution-relative). Top-left by default.
+    readonly property var _menuStored: {
+        var _ = DesktopWidgetStore._positions;
+        return DesktopWidgetStore._positions["widget-menu"] ?? null;
+    }
+    readonly property real _menuFx: root._menuStored ? root._menuStored.x : Math.round(UIScale.spacingLg) / Math.max(1, root.width)
+    readonly property real _menuFy: root._menuStored ? root._menuStored.y : Math.round(UIScale.spacingLg) / Math.max(1, root.height)
+    property bool _menuMoving: false
+    property real _menuDragX: 0
+    property real _menuDragY: 0
+    function _clamp(v, lo, hi) {
+        return Math.max(lo, Math.min(hi, v));
+    }
+
+    // Nothing enabled yet: the menu opens by itself and its edge pulses until the first
+    // widget is placed. Pulse stops once a drag starts.
+    readonly property bool _emptyStart: DesktopWidgetStore.enabledKeys.length === 0
+    property real _pulse: 1.0
+    SequentialAnimation {
+        running: root._emptyStart && !root._dragging
+        loops: Animation.Infinite
+        NumberAnimation {
+            target: root
+            property: "_pulse"
+            from: 1.0
+            to: 0.3
+            duration: Anim.slow
+            easing.type: Easing.InOutSine
+        }
+        NumberAnimation {
+            target: root
+            property: "_pulse"
+            from: 0.3
+            to: 1.0
+            duration: Anim.slow
+            easing.type: Easing.InOutSine
+        }
+    }
+
+    readonly property bool _menuPinned: root._dragging && (root._rectNear(root._pointerX, root._pointerY, 0, 0) || (root._dragItem !== null && root._rectNear(root._dragItem.x, root._dragItem.y, root._dragItem.width, root._dragItem.height)))
+
+    // The open list's area: the drop target, and the reference for proximity.
+    function _listRect() {
+        return {
+            x: menu.x,
+            y: menu.y,
+            w: menu._openW,
+            h: menu._listH + menu._pad * 2
+        };
+    }
+
+    function _rectNear(x, y, w, h) {
+        var r = root._listRect();
+        var gx = Math.max(r.x - (x + w), x - (r.x + r.w), 0);
+        var gy = Math.max(r.y - (y + h), y - (r.y + r.h), 0);
+        return Math.sqrt(gx * gx + gy * gy) < root._nearPx;
+    }
+
+    function _pointInMenu(px, py) {
+        var r = root._listRect();
+        return px >= r.x && px < r.x + r.w && py >= r.y && py < r.y + r.h;
+    }
+
+    function _moveEntryDrag(p) {
+        root._pointerX = p.x;
+        root._pointerY = p.y;
+        root._overMenu = root._pointInMenu(p.x, p.y);
+        var x = p.x - root._ghostGrabX;
+        var y = p.y - root._ghostGrabY;
+        if (root.snapEnabled && !root._overMenu) {
+            // The ghost is the widget at desktop scale, so it snaps by its real size.
+            var s = root._computeSnap(ghost, x, y);
+            x = s.x;
+            y = s.y;
+            root._snapGuideX = s.guideX;
+            root._snapGuideY = s.guideY;
+        } else {
+            root._snapGuideX = undefined;
+            root._snapGuideY = undefined;
+        }
+        root._ghostX = x;
+        root._ghostY = y;
+    }
+
+    function _finishEntryDrag() {
+        var key = root._entryKey;
+        var drop = key !== "" && !root._overMenu;
+        root._entryKey = "";
+        root._dragItem = null;
+        root._overMenu = false;
+        root._snapGuideX = undefined;
+        root._snapGuideY = undefined;
+        if (drop) {
+            // A non-finite drop point would park the widget at NaN, so fall back to the
+            // stored position in that case.
+            if (!isFinite(root._ghostX) || !isFinite(root._ghostY)) {
+                DesktopWidgetStore.enableWidget(key);
+                return;
+            }
+            var fx = Math.max(0, Math.min(1, root._ghostX / Math.max(1, root.width)));
+            var fy = Math.max(0, Math.min(1, root._ghostY / Math.max(1, root.height)));
+            DesktopWidgetStore.placeWidget(key, fx, fy);
+        }
+    }
 
     function _proxyForKey(key) {
         if (!key)
@@ -61,13 +199,10 @@ PanelWindow {
         var p = root._nudgeTarget();
         if (!p)
             return;
-        var nx = Math.max(0, Math.min(1, p._nx + dx / Math.max(1, root.width - p.width)));
-        var ny = Math.max(0, Math.min(1, p._ny + dy / Math.max(1, root.height - p.height)));
-        DesktopWidgetStore.setPosCoalesced(p.wKey, nx, ny, "nudge:" + p.wKey);
-        p._nx = nx;
-        p._ny = ny;
-        p.x = Qt.binding(() => p._nx * Math.max(1, root.width - p.width));
-        p.y = Qt.binding(() => p._ny * Math.max(1, root.height - p.height));
+        var fx = Math.max(0, Math.min(p._maxFx, p._fx + dx / Math.max(1, root.width)));
+        var fy = Math.max(0, Math.min(p._maxFy, p._fy + dy / Math.max(1, root.height)));
+        DesktopWidgetStore.setPosCoalesced(p.wKey, fx, fy, "nudge:" + p.wKey);
+        p._reseed();
         root._lastMovedKey = p.wKey;
     }
 
@@ -89,6 +224,28 @@ PanelWindow {
     }
     mask: overlayInputRegion
 
+    // Columns and rows for this screen (see DesktopGridSettings.countsFor).
+    readonly property var _gridCounts: DesktopGridSettings.countsFor(root.width, root.height)
+
+    // Grid line positions along one axis, in screen pixels: the screen cut into equal cells.
+    function _gridLines(axis) {
+        var n = axis === "x" ? root._gridCounts.cols : root._gridCounts.rows;
+        var extent = axis === "x" ? root.width : root.height;
+        var out = [];
+        for (var k = 0; k <= n; k++)
+            out.push(extent * k / n);
+        return out;
+    }
+
+    // How close a drag must come to a grid line to snap to it, in screen pixels. It is a share
+    // of the cell, so the same share of the drag range snaps at every resolution and density.
+    // The minimum keeps the band hittable on the smallest cells.
+    function _gridSnapBand(axis) {
+        var n = axis === "x" ? root._gridCounts.cols : root._gridCounts.rows;
+        var extent = axis === "x" ? root.width : root.height;
+        return Math.max(Math.round(6 * UIScale.value), extent / n * root._gridBandShare);
+    }
+
     // Active alignment guides, set during drag, cleared on release.
     // undefined = hidden, a number = draw guide at that coordinate.
     property var _snapGuideX // vertical line (x snap)
@@ -108,13 +265,25 @@ PanelWindow {
             candidates.push(start, start + size, start + size / 2);
         }
 
-        var best = raw, bestGuide = undefined, bestD = thr;
+        var best = raw, bestGuide = undefined, bestD = Infinity;
         for (var j = 0; j < candidates.length; j++) {
             var d = Math.abs(raw - candidates[j]);
-            if (d < bestD) {
+            if (d < thr && d < bestD) {
                 bestD = d;
                 best = candidates[j];
                 bestGuide = candidates[j];
+            }
+        }
+
+        // Grid lines snap within their own band, which can be wider than the widget threshold.
+        var gridBand = root._gridSnapBand(axis);
+        var lines = root._gridLines(axis);
+        for (var g = 0; g < lines.length; g++) {
+            var gd = Math.abs(raw - lines[g]);
+            if (gd < gridBand && gd < bestD) {
+                bestD = gd;
+                best = lines[g];
+                bestGuide = lines[g];
             }
         }
 
@@ -224,20 +393,51 @@ PanelWindow {
             });
         }
 
-        var bX = rawX, bgX = undefined, bdX = thr;
+        // Grid lines: a left or top edge can land on a line, and so can a right or bottom edge.
+        // Each candidate carries its own band. Candidates without one use the widget threshold.
+        var gxs = root._gridLines("x");
+        var gbX = root._gridSnapBand("x");
+        for (var g = 0; g < gxs.length; g++) {
+            xC.push({
+                snapX: gxs[g],
+                guideX: gxs[g],
+                band: gbX
+            });
+            xC.push({
+                snapX: gxs[g] - pW,
+                guideX: gxs[g],
+                band: gbX
+            });
+        }
+        var gys = root._gridLines("y");
+        var gbY = root._gridSnapBand("y");
+        for (var h = 0; h < gys.length; h++) {
+            yC.push({
+                snapY: gys[h],
+                guideY: gys[h],
+                band: gbY
+            });
+            yC.push({
+                snapY: gys[h] - pH,
+                guideY: gys[h],
+                band: gbY
+            });
+        }
+
+        var bX = rawX, bgX = undefined, bdX = Infinity;
         for (var j = 0; j < xC.length; j++) {
             var dx = Math.abs(rawX - xC[j].snapX);
-            if (dx < bdX) {
+            if (dx < (xC[j].band ?? thr) && dx < bdX) {
                 bdX = dx;
                 bX = xC[j].snapX;
                 bgX = xC[j].guideX;
             }
         }
 
-        var bY = rawY, bgY = undefined, bdY = thr;
+        var bY = rawY, bgY = undefined, bdY = Infinity;
         for (var k = 0; k < yC.length; k++) {
             var dy = Math.abs(rawY - yC[k].snapY);
-            if (dy < bdY) {
+            if (dy < (yC[k].band ?? thr) && dy < bdY) {
                 bdY = dy;
                 bY = yC[k].snapY;
                 bgY = yC[k].guideY;
@@ -255,7 +455,12 @@ PanelWindow {
     Shortcut {
         sequence: "Escape"
         enabled: !root._fileDialogOpen
-        onActivated: DesktopWidgetStore.configMode = false
+        onActivated: {
+            if (root.snapMenuOpen)
+                root.snapMenuOpen = false;
+            else
+                DesktopWidgetStore.configMode = false;
+        }
     }
     Shortcut {
         sequences: ["Ctrl+Z"]
@@ -311,23 +516,86 @@ PanelWindow {
         color: Colors.withAlpha(Colors.bg, 0.45)
     }
 
+    // Alignment grid, under the widgets. Shown while snap is on, unless the style is none.
+    Canvas {
+        id: gridCanvas
+        anchors.fill: parent
+        visible: root.snapEnabled && DesktopGridSettings.style !== "none" && DesktopGridSettings.gridOpacity > 0
+        opacity: DesktopGridSettings.gridOpacity
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Anim.fast
+            }
+        }
+
+        readonly property string gridSignature: [root.width, root.height, root._gridCounts.cols, root._gridCounts.rows, DesktopGridSettings.style].join("|")
+        onGridSignatureChanged: requestPaint()
+        onVisibleChanged: {
+            if (visible)
+                requestPaint();
+        }
+        Component.onCompleted: requestPaint()
+
+        onPaint: {
+            var ctx = getContext("2d");
+            ctx.clearRect(0, 0, width, height);
+            var cols = root._gridCounts.cols;
+            var rows = root._gridCounts.rows;
+            var c = Colors.text;
+            var ink = Qt.rgba(c.r, c.g, c.b, 1);
+            var style = DesktopGridSettings.style;
+
+            if (style === "lines" || style === "both") {
+                ctx.strokeStyle = ink;
+                ctx.lineWidth = Math.max(1, Math.round(UIScale.value));
+                ctx.beginPath();
+                for (var kx = 0; kx <= cols; kx++) {
+                    var lx = width * kx / cols;
+                    ctx.moveTo(lx, 0);
+                    ctx.lineTo(lx, height);
+                }
+                for (var ky = 0; ky <= rows; ky++) {
+                    var ly = height * ky / rows;
+                    ctx.moveTo(0, ly);
+                    ctx.lineTo(width, ly);
+                }
+                ctx.stroke();
+            }
+            if (style === "dots" || style === "both") {
+                var r = Math.max(1, Math.round(2 * UIScale.value));
+                ctx.fillStyle = ink;
+                ctx.beginPath();
+                for (var dy = 0; dy <= rows; dy++) {
+                    for (var dx = 0; dx <= cols; dx++) {
+                        var px = width * dx / cols;
+                        var py = height * dy / rows;
+                        ctx.moveTo(px + r, py);
+                        ctx.arc(px, py, r, 0, 2 * Math.PI);
+                    }
+                }
+                ctx.fill();
+            }
+        }
+    }
+
     // Widget proxies
     Repeater {
         id: widgetRepeater
-        model: DesktopWidgetStore._widgets
+        model: DesktopWidgetStore.enabledModel
 
         delegate: Item {
             id: proxy
-            required property var modelData
+            required property string widgetKey
             required property int index
 
-            readonly property string wKey: modelData.key
+            readonly property string wKey: widgetKey
             readonly property bool _selected: root.selectedKey === proxy.wKey
 
             readonly property bool _isCava: proxy.wKey === "cava" || proxy.wKey === "cava-left" || proxy.wKey === "cava-right"
             readonly property string _cavaChannel: proxy.wKey === "cava-left" ? "left" : proxy.wKey === "cava-right" ? "right" : "average"
-            property real _nx: DesktopWidgetStore.getPos(wKey).nx
-            property real _ny: DesktopWidgetStore.getPos(wKey).ny
+            // Local editing copy of the top-left, as a screen fraction (see DesktopWidgetStore.fractionFor).
+            property real _fx: DesktopWidgetStore.fractionFor(wKey, proxy._refW, proxy._refH).x
+            property real _fy: DesktopWidgetStore.fractionFor(wKey, proxy._refW, proxy._refH).y
 
             readonly property bool _skewEnabled: {
                 var _ = DesktopWidgetStore._positions;
@@ -437,8 +705,8 @@ PanelWindow {
             }
 
             function _reseed() {
-                proxy._nx = Qt.binding(() => DesktopWidgetStore.getPos(proxy.wKey).nx);
-                proxy._ny = Qt.binding(() => DesktopWidgetStore.getPos(proxy.wKey).ny);
+                proxy._fx = Qt.binding(() => DesktopWidgetStore.fractionFor(proxy.wKey, proxy._refW, proxy._refH).x);
+                proxy._fy = Qt.binding(() => DesktopWidgetStore.fractionFor(proxy.wKey, proxy._refW, proxy._refH).y);
                 proxy._rebindSkew();
             }
             Connections {
@@ -492,11 +760,55 @@ PanelWindow {
             readonly property bool _overrideW: _size.w > 0
             readonly property bool _overrideH: _size.h > 0
 
-            width: (proxy._overrideW ? proxy._size.w : proxyContent.implicitWidth) + _bgPad * 2
-            height: (proxy._overrideH ? proxy._size.h : proxyContent.implicitHeight) + _bgPad * 2
+            // Footprint in ref px, bg padding included. Stored positions resolve against
+            // it (see DesktopWidgetStore.fractionFor).
+            readonly property real _refW: (proxy._overrideW ? proxy._size.w : (proxyContent.item?.implicitWidth ?? 0)) + _bgPad * 2
+            readonly property real _refH: (proxy._overrideH ? proxy._size.h : (proxyContent.item?.implicitHeight ?? 0)) + _bgPad * 2
 
-            x: _nx * Math.max(1, root.width - width)
-            y: _ny * Math.max(1, root.height - height)
+            // Natural footprint in ref px, for the fit to the allocated box.
+            readonly property real _natW: (proxyContent.item?.implicitWidth ?? 0) + _bgPad * 2
+            readonly property real _natH: (proxyContent.item?.implicitHeight ?? 0) + _bgPad * 2
+
+            // Resize drag state. While a resize runs, the box comes from these, never
+            // from assigning width/height/x/y. An assignment detaches the binding to the
+            // screen, and only the drag's release reattaches it, so a drag that ends
+            // without release (its handle is destroyed on deselect) would freeze the frame
+            // at the old size while the content kept following the screen.
+            // The drag box is kept in ref px, like the stored size, so it still
+            // follows the screen if the resolution changes mid-drag.
+            property bool _resizing: false
+            property real _dragRefW: 0
+            property real _dragRefH: 0
+            property real _dragFx: 0
+            property real _dragFy: 0
+
+            // Screen px box and content scale for this widget, see DesktopWidgetStore.boxFor.
+            // Same fill/fit split as DesktopWidget (fillsBox content reflows to the box).
+            readonly property bool _fillsBox: proxyContent.item?.fillsBox ?? false
+            readonly property var _box: DesktopWidgetStore.boxFor(proxy._natW, proxy._natH, proxy._resizing ? proxy._dragRefW : proxy._size.w, proxy._resizing ? proxy._dragRefH : proxy._size.h, proxy._bgPad, root.width, root.height, proxy._fillsBox)
+
+            // Converts a screen px length to ref px and back, for the stored size.
+            function _toRefX(px) {
+                return px * DesktopWidgetStore.refWidth / Math.max(1, root.width);
+            }
+            function _toRefY(px) {
+                return px * DesktopWidgetStore.refHeight / Math.max(1, root.height);
+            }
+
+            width: _box.w
+            height: _box.h
+
+            // Largest fraction that keeps the proxy on screen.
+            readonly property real _maxFx: Math.max(0, 1 - width / Math.max(1, root.width))
+            readonly property real _maxFy: Math.max(0, 1 - height / Math.max(1, root.height))
+            readonly property real _leftPx: Math.max(0, Math.min(_fx * root.width, root.width - width))
+            readonly property real _topPx: Math.max(0, Math.min(_fy * root.height, root.height - height))
+
+            // While the frame is moved or resized, the position comes from the drag state.
+            property bool _moving: false
+            readonly property bool _dragging: _moving || _resizing
+            x: _dragging ? _dragFx * root.width : _leftPx
+            y: _dragging ? _dragFy * root.height : _topPx
 
             z: proxy._selected ? 10 : 0
 
@@ -581,13 +893,17 @@ PanelWindow {
                     bgConfig: proxy._bgConfig
                 }
 
+                // Fit or fill, same as the live DesktopWidget (see its contentLoader).
                 // width/height stay bound always, see docs/qml-patterns.md #2 for why
                 Loader {
                     id: proxyContent
-                    anchors.centerIn: parent
-                    sourceComponent: proxy.modelData.component
-                    width: proxy._overrideW ? proxy._size.w : (item?.implicitWidth ?? 0)
-                    height: proxy._overrideH ? proxy._size.h : (item?.implicitHeight ?? 0)
+                    x: proxy._box.dx + proxy._box.pad
+                    y: proxy._box.dy + proxy._box.pad
+                    transformOrigin: Item.TopLeft
+                    scale: proxy._box.s
+                    sourceComponent: DesktopWidgetCatalog.componentFor(proxy.wKey)
+                    width: proxy._box.fill ? proxy._box.cw : (item?.implicitWidth ?? 0)
+                    height: proxy._box.fill ? proxy._box.ch : (item?.implicitHeight ?? 0)
                 }
             }
 
@@ -629,21 +945,42 @@ PanelWindow {
                 property point _startScene: Qt.point(0, 0)
                 property point _startPos: Qt.point(0, 0)
 
+                // Like the resize handles, the move writes drag state (_dragFx/_dragFy),
+                // never proxy.x/y. Assigning x/y would replace the binding that the
+                // resize reads, and the release would leave it on the stored position.
                 onActiveChanged: {
                     if (active) {
                         dragger._startScene = dragger.centroid.scenePosition;
-                        dragger._startPos = Qt.point(proxy.x, proxy.y);
+                        dragger._startPos = Qt.point(proxy._leftPx, proxy._topPx);
+                        proxy._dragFx = proxy._leftPx / Math.max(1, root.width);
+                        proxy._dragFy = proxy._topPx / Math.max(1, root.height);
+                        proxy._moving = true;
+                        root._widgetDragging = true;
+                        root._dragItem = proxy;
+                        root._overMenu = false;
                     } else {
                         root._snapGuideX = undefined;
                         root._snapGuideY = undefined;
-                        var rW = Math.max(1, root.width - proxy.width);
-                        var rH = Math.max(1, root.height - proxy.height);
-                        proxy._nx = Math.max(0.0, Math.min(1.0, proxy.x / rW));
-                        proxy._ny = Math.max(0.0, Math.min(1.0, proxy.y / rH));
-                        DesktopWidgetStore.setPos(proxy.wKey, proxy._nx, proxy._ny);
+                        root._widgetDragging = false;
+                        root._dragItem = null;
+                        if (root._overMenu) {
+                            // Dropped on the menu removes the widget. Deferred, because this
+                            // handler belongs to the proxy that the removal destroys.
+                            root._overMenu = false;
+                            proxy._moving = false;
+                            var removedKey = proxy.wKey;
+                            Qt.callLater(function () {
+                                DesktopWidgetStore.disableWidget(removedKey);
+                            });
+                            return;
+                        }
+                        root._overMenu = false;
+                        var mfx = Math.max(0.0, Math.min(proxy._maxFx, proxy._dragFx));
+                        var mfy = Math.max(0.0, Math.min(proxy._maxFy, proxy._dragFy));
+                        proxy._moving = false;
+                        DesktopWidgetStore.setPos(proxy.wKey, mfx, mfy);
+                        proxy._reseed();
                         root._lastMovedKey = proxy.wKey;
-                        proxy.x = Qt.binding(() => proxy._nx * Math.max(1, root.width - proxy.width));
-                        proxy.y = Qt.binding(() => proxy._ny * Math.max(1, root.height - proxy.height));
                     }
                 }
 
@@ -652,23 +989,34 @@ PanelWindow {
                         return;
                     var rawX = dragger._startPos.x + (dragger.centroid.scenePosition.x - dragger._startScene.x);
                     var rawY = dragger._startPos.y + (dragger.centroid.scenePosition.y - dragger._startScene.y);
-                    if (root.snapEnabled) {
+                    root._pointerX = dragger.centroid.scenePosition.x;
+                    root._pointerY = dragger.centroid.scenePosition.y;
+                    root._overMenu = root._pointInMenu(dragger.centroid.scenePosition.x, dragger.centroid.scenePosition.y);
+                    if (root.snapEnabled && !root._overMenu) {
                         var s = root._computeSnap(proxy, rawX, rawY);
-                        proxy.x = s.x;
-                        proxy.y = s.y;
+                        proxy._dragFx = s.x / Math.max(1, root.width);
+                        proxy._dragFy = s.y / Math.max(1, root.height);
                         root._snapGuideX = s.guideX;
                         root._snapGuideY = s.guideY;
                     } else {
-                        proxy.x = rawX;
-                        proxy.y = rawY;
+                        proxy._dragFx = rawX / Math.max(1, root.width);
+                        proxy._dragFy = rawY / Math.max(1, root.height);
                         root._snapGuideX = undefined;
                         root._snapGuideY = undefined;
                     }
                 }
             }
 
+            // Click toggles the selection. Right click selects it (it doesn't toggle off),
+            // so the handles and the settings are one click away either way.
             TapHandler {
-                onTapped: root.selectedKey = proxy._selected ? "" : proxy.wKey
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onTapped: (eventPoint, button) => {
+                    if (button === Qt.RightButton)
+                        root.selectedKey = proxy.wKey;
+                    else
+                        root.selectedKey = proxy._selected ? "" : proxy.wKey;
+                }
             }
 
             HoverHandler {
@@ -737,6 +1085,14 @@ PanelWindow {
                     property real _startH
                     property point _startScene
 
+                    // Clearing the selection destroys the handles, and a drag in progress then
+                    // never gets its release. Drop the drag state so the frame returns to its
+                    // stored geometry.
+                    Component.onDestruction: {
+                        if (proxy && proxy._resizing)
+                            proxy._resizing = false;
+                    }
+
                     HoverHandler {
                         cursorShape: {
                             switch (handle.modelData) {
@@ -768,24 +1124,27 @@ PanelWindow {
                                 handle._startY = proxy.y;
                                 handle._startW = proxy.width;
                                 handle._startH = proxy.height;
+                                proxy._dragRefW = proxy._toRefX(proxy._box.w);
+                                proxy._dragRefH = proxy._toRefY(proxy._box.h);
+                                proxy._dragFx = proxy._leftPx / Math.max(1, root.width);
+                                proxy._dragFy = proxy._topPx / Math.max(1, root.height);
+                                proxy._resizing = true;
                             } else {
                                 root._snapGuideX = undefined;
                                 root._snapGuideY = undefined;
-                                var w = Math.max(1, Math.round(proxy.width - proxy._bgPad * 2));
-                                var h = Math.max(1, Math.round(proxy.height - proxy._bgPad * 2));
+                                // The stored box is in ref px, same as the drag state. It includes the bg padding.
+                                var w = Math.max(1, Math.round(proxy._dragRefW));
+                                var h = Math.max(1, Math.round(proxy._dragRefH));
+                                // Position clamp reads the drag box, so compute it before
+                                // the drag state is dropped.
+                                var fx = Math.max(0.0, Math.min(proxy._maxFx, proxy._dragFx));
+                                var fy = Math.max(0.0, Math.min(proxy._maxFy, proxy._dragFy));
+                                proxy._resizing = false;
                                 DesktopWidgetStore.setSize(proxy.wKey, w, h);
 
-                                var rW = Math.max(1, root.width - proxy.width);
-                                var rH = Math.max(1, root.height - proxy.height);
-                                proxy._nx = Math.max(0.0, Math.min(1.0, proxy.x / rW));
-                                proxy._ny = Math.max(0.0, Math.min(1.0, proxy.y / rH));
-                                DesktopWidgetStore.setPos(proxy.wKey, proxy._nx, proxy._ny);
+                                DesktopWidgetStore.setPos(proxy.wKey, fx, fy);
+                                proxy._reseed();
                                 root._lastMovedKey = proxy.wKey;
-
-                                proxy.x = Qt.binding(() => proxy._nx * Math.max(1, root.width - proxy.width));
-                                proxy.y = Qt.binding(() => proxy._ny * Math.max(1, root.height - proxy.height));
-                                proxy.width = Qt.binding(() => (proxy._overrideW ? proxy._size.w : proxyContent.implicitWidth) + proxy._bgPad * 2);
-                                proxy.height = Qt.binding(() => (proxy._overrideH ? proxy._size.h : proxyContent.implicitHeight) + proxy._bgPad * 2);
                             }
                         }
 
@@ -795,8 +1154,8 @@ PanelWindow {
 
                             var dx = resizeDrag.centroid.scenePosition.x - handle._startScene.x;
                             var dy = resizeDrag.centroid.scenePosition.y - handle._startScene.y;
-                            var minW = Math.round(40 * UIScale.value) + proxy._bgPad * 2;
-                            var minH = Math.round(24 * UIScale.value) + proxy._bgPad * 2;
+                            var minW = Math.round(40 * UIScale.value);
+                            var minH = Math.round(24 * UIScale.value);
 
                             var newX = handle._startX;
                             var newY = handle._startY;
@@ -845,10 +1204,11 @@ PanelWindow {
                             root._snapGuideX = guideX;
                             root._snapGuideY = guideY;
 
-                            proxy.width = newW;
-                            proxy.height = newH;
-                            proxy.x = newX;
-                            proxy.y = newY;
+                            // Screen px in, ref px stored, so the frame keeps tracking the screen scale.
+                            proxy._dragRefW = proxy._toRefX(newW);
+                            proxy._dragRefH = proxy._toRefY(newH);
+                            proxy._dragFx = newX / Math.max(1, root.width);
+                            proxy._dragFy = newY / Math.max(1, root.height);
                         }
                     }
                 }
@@ -2152,77 +2512,434 @@ PanelWindow {
         opacity: 0.55
     }
 
-    // Widget catalog panel, left side
-    Column {
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.margins: Math.round(UIScale.spacingLg)
-        spacing: Math.round(UIScale.spacingXs)
+    // Widget menu, left edge. Collapsed it is a tab. Hovering it, or dragging anything,
+    // opens it to list the widgets that are off, each as a live preview of the real widget.
+    // Dragging an entry out takes it off the list, and it stays off the list while it is
+    // on the desktop. Dragging an enabled widget back onto the menu puts its entry back
+    // in its place. Tapping an entry turns it on.
+    Rectangle {
+        id: menu
 
-        Repeater {
-            model: DesktopWidgetCatalog.entries
+        readonly property real _tabW: Math.round(52 * UIScale.value)
+        readonly property real _openW: Math.round(260 * UIScale.value)
+        readonly property real _pad: Math.round(UIScale.spacingSm)
+        // A thumb drag keeps the list open even when the pointer leaves the menu.
+        readonly property bool _open: menuHover.hovered || root._menuPinned || root._emptyStart || thumbDrag.active
 
-            delegate: Rectangle {
-                id: catalogRow
-                required property var modelData
-                required property int index
+        // Clamped so the open list stays on screen. While dragged, the drag state drives x/y
+        // (see menuDrag), the stored fraction drives it otherwise.
+        readonly property real _maxX: Math.max(0, root.width - menu._openW)
+        readonly property real _maxY: Math.max(0, root.height - (menu._listH + menu._pad * 2))
 
-                property bool _on: DesktopWidgetStore.isEnabled(catalogRow.modelData.key)
+        // The list is capped to the screen, the entries scroll inside it.
+        readonly property real _margin: Math.round(UIScale.spacingLg)
+        // The open header's height, written out here: menuHeader reads _open, which reads this list.
+        readonly property real _headerH: menuIcon.implicitHeight + Math.round(UIScale.spacingSm)
+        readonly property real _fullListH: menu._headerH + entryColumn.implicitHeight
+        readonly property real _listH: Math.min(menu._fullListH, Math.max(menu._tabW, root.height - 2 * menu._margin - 2 * menu._pad))
+        readonly property real _viewH: Math.max(0, menu._listH - menu._headerH)
+        readonly property real _maxScroll: Math.max(0, entryColumn.implicitHeight - menu._viewH)
+        property real _scroll: 0
+        x: root._menuMoving ? root._menuDragX : root._clamp(root._menuFx * root.width, 0, menu._maxX)
+        y: root._menuMoving ? root._menuDragY : root._clamp(root._menuFy * root.height, 0, menu._maxY)
+        width: menu._open ? menu._openW : menu._tabW
+        // Height is bound straight to the tab size, not to the header's height. Otherwise it
+        // retargets every frame while the header animates and trails the width.
+        height: menu._open ? menuColumn.implicitHeight + menu._pad * 2 : menu._tabW
+        radius: UIScale.radiusMd
+        clip: true
+        color: root._overMenu ? Colors.withAlpha(Colors.accent, 0.18) : Colors.surface
+        border.color: Colors.withAlpha(Colors.accent, root._overMenu || root._dragging ? 1.0 : root._pulse)
+        border.width: (root._overMenu || root._emptyStart) ? Math.round(1.5 * UIScale.value) : 0
 
-                implicitWidth: catalogRowContent.implicitWidth + Math.round(UIScale.spacingMd * 2)
-                implicitHeight: catalogRowContent.implicitHeight + Math.round(UIScale.spacingSm * 2)
-                radius: height / 2
-                color: catalogRow._on ? Colors.withAlpha(Colors.accent, 0.15) : Colors.surface
+        Behavior on width {
+            NumberAnimation {
+                duration: Anim.medium
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Anim.emphasizedDecel
+            }
+        }
+        Behavior on height {
+            NumberAnimation {
+                duration: Anim.medium
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Anim.emphasizedDecel
+            }
+        }
 
-                Behavior on color {
-                    ColorAnimation {
-                        duration: 100
+        HoverHandler {
+            id: menuHover
+        }
+
+        // Shows where the list is when it overflows. It sits in the menu's right padding.
+        Rectangle {
+            id: scrollThumb
+            readonly property real _len: menu._maxScroll > 0
+                ? Math.max(Math.round(24 * UIScale.value), menu._viewH * menu._viewH / Math.max(1, entryColumn.implicitHeight))
+                : 0
+            visible: menu._open && menu._maxScroll > 0
+            width: Math.max(2, Math.round(3 * UIScale.value))
+            height: _len
+            x: menuColumn.x + menuColumn.width + Math.round((menu._pad - width) / 2)
+            y: menuColumn.y + menuHeader.height + Math.round((menu._viewH - _len) * Math.min(menu._scroll, menu._maxScroll) / Math.max(1, menu._maxScroll))
+            radius: width / 2
+            color: Colors.withAlpha(Colors.textDim, 0.6)
+        }
+
+        // Drag strip for the scroll thumb. It overlaps the card edge a little so it is easy to hit.
+        Item {
+            id: scrollGrab
+            z: 1
+            visible: menu._open && menu._maxScroll > 0
+            x: menuColumn.x + menuColumn.width - Math.round(6 * UIScale.value)
+            y: menuColumn.y + menuHeader.height
+            width: menu._openW - x
+            height: menu._viewH
+
+            DragHandler {
+                id: thumbDrag
+                target: null
+                xAxis.enabled: false
+                property real _startScroll: 0
+                onActiveChanged: {
+                    if (active)
+                        thumbDrag._startScroll = menu._scroll;
+                }
+                onTranslationChanged: {
+                    var travel = Math.max(1, menu._viewH - scrollThumb._len);
+                    menu._scroll = Math.max(0, Math.min(menu._maxScroll, thumbDrag._startScroll + thumbDrag.translation.y * menu._maxScroll / travel));
+                }
+            }
+        }
+
+        Column {
+            id: menuColumn
+            x: menu._pad
+            y: menu._pad
+            width: menu._openW - menu._pad * 2
+
+            // Collapsed, the header is exactly the tab's inner square and the icon is centred
+            // in it, so the tab is square. Open, the icon sits at the top above the list.
+            Item {
+                id: menuHeader
+                width: menuColumn.width
+                height: menu._open ? menuIcon.implicitHeight + Math.round(UIScale.spacingSm) : menu._tabW - menu._pad * 2
+
+                Behavior on height {
+                    NumberAnimation {
+                        duration: Anim.medium
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Anim.emphasizedDecel
                     }
                 }
 
-                Row {
-                    id: catalogRowContent
-                    anchors.centerIn: parent
-                    spacing: Math.round(UIScale.spacingSm)
+                // Drag handle: the header moves the whole menu. Entries keep their own drags.
+                HoverHandler {
+                    cursorShape: menuDrag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                }
 
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: catalogRow.modelData.label
-                        color: catalogRow._on ? Colors.accent : Colors.textDim
-                        font.pixelSize: UIScale.fontSmall
+                DragHandler {
+                    id: menuDrag
+                    target: null
+                    grabPermissions: PointerHandler.CanTakeOverFromAnything
 
-                        Behavior on color {
-                            ColorAnimation {
-                                duration: 100
-                            }
+                    property point _startScene: Qt.point(0, 0)
+                    property point _startPos: Qt.point(0, 0)
+
+                    onActiveChanged: {
+                        if (active) {
+                            menuDrag._startScene = menuDrag.centroid.scenePosition;
+                            menuDrag._startPos = Qt.point(menu.x, menu.y);
+                            root._menuDragX = menu.x;
+                            root._menuDragY = menu.y;
+                            root._menuMoving = true;
+                        } else {
+                            root._menuMoving = false;
+                            var fx = root._clamp(root._menuDragX / Math.max(1, root.width), 0, menu._maxX / Math.max(1, root.width));
+                            var fy = root._clamp(root._menuDragY / Math.max(1, root.height), 0, menu._maxY / Math.max(1, root.height));
+                            DesktopWidgetStore.setPos("widget-menu", fx, fy);
                         }
                     }
 
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: catalogRow._on ? "x" : "+"
-                        color: catalogRow._on ? Colors.accent : Colors.textDim
-                        font.pixelSize: UIScale.fontSmall
-                        font.bold: true
-
-                        Behavior on color {
-                            ColorAnimation {
-                                duration: 100
-                            }
-                        }
+                    onCentroidChanged: {
+                        if (!menuDrag.active)
+                            return;
+                        var dx = menuDrag.centroid.scenePosition.x - menuDrag._startScene.x;
+                        var dy = menuDrag.centroid.scenePosition.y - menuDrag._startScene.y;
+                        root._menuDragX = root._clamp(menuDrag._startPos.x + dx, 0, menu._maxX);
+                        root._menuDragY = root._clamp(menuDrag._startPos.y + dy, 0, menu._maxY);
                     }
                 }
 
-                HoverHandler {}
+                // Tracks the press itself, so the grip lights up on click-down, before any drag.
+                // Declared after menuDrag, the same order the desktop proxies use.
                 TapHandler {
-                    onTapped: {
-                        if (catalogRow._on)
-                            DesktopWidgetStore.disableWidget(catalogRow.modelData.key);
-                        else
-                            DesktopWidgetStore.enableWidget(catalogRow.modelData.key);
+                    id: menuPress
+                }
+
+                // Grip pill: says the panel can be dragged by its header. Only shown when expanded,
+                // centred in the header row.
+                Rectangle {
+                    id: menuGrip
+                    width: Math.round(40 * UIScale.value)
+                    height: Math.round(5 * UIScale.value)
+                    radius: height / 2
+                    x: menu._open ? Math.round((menuColumn.width - width) / 2) : Math.round((menu._tabW - menu._pad * 2 - width) / 2)
+                    y: menu._open ? Math.round((menuIcon.implicitHeight - height) / 2) : 0
+                    opacity: menu._open ? 1 : 0
+                    color: (menuDrag.active || menuPress.pressed) ? Colors.accent : Colors.textDim
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: Anim.fast
+                        }
+                    }
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: Anim.medium
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Anim.emphasizedDecel
+                        }
+                    }
+                }
+
+                Text {
+                    id: menuIcon
+                    x: menu._open ? 0 : Math.round((menu._tabW - menu._pad * 2 - width) / 2)
+                    y: menu._open ? 0 : Math.round((menuHeader.height - height) / 2)
+                    text: "widgets"
+                    font.family: "Material Symbols Rounded"
+                    font.pixelSize: Math.round(18 * UIScale.value)
+                    color: Colors.accent
+
+                    Behavior on y {
+                        NumberAnimation {
+                            duration: Anim.medium
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Anim.emphasizedDecel
+                        }
+                    }
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: Anim.medium
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Anim.emphasizedDecel
+                        }
                     }
                 }
             }
+
+            // Entries sit in a clipped viewport below the header. The wheel scrolls it.
+            Item {
+                id: listViewport
+                width: menuColumn.width
+                height: menu._viewH
+                clip: true
+
+                Column {
+                    id: entryColumn
+                    width: listViewport.width
+                    y: -Math.min(menu._scroll, menu._maxScroll)
+
+                    Repeater {
+                        model: DesktopWidgetCatalog.entries
+
+                        // An entry is gone from the list while its widget is enabled, and while it is
+                        // being dragged out. Its height collapses, so the list closes up around it.
+                        delegate: Item {
+                            id: entryChip
+                            required property var modelData
+                            required property int index
+
+                            readonly property bool _on: DesktopWidgetStore.isEnabled(entryChip.modelData.key)
+                            readonly property bool _lifted: root._entryKey === entryChip.modelData.key
+                            readonly property bool _gone: entryChip._on || entryChip._lifted
+                            readonly property real _gap: Math.round(UIScale.spacingSm)
+
+                            width: menuColumn.width
+                            height: entryChip._gone ? 0 : entryCard.height + entryChip._gap
+                            clip: true
+
+                            Behavior on height {
+                                NumberAnimation {
+                                    duration: Anim.medium
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: Anim.emphasizedDecel
+                                }
+                            }
+
+                            Rectangle {
+                                id: entryCard
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                height: entryBody.implicitHeight + Math.round(UIScale.spacingSm * 2)
+                                radius: UIScale.radiusSm
+                                color: Colors.withAlpha(Colors.text, 0.04)
+
+                                Column {
+                                    id: entryBody
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.top: parent.top
+                                    anchors.margins: Math.round(UIScale.spacingSm)
+                                    spacing: Math.round(UIScale.spacingSm)
+
+                                    // Live preview: the real widget, scaled down to fit the box. Only loaded
+                                    // while the menu is open and the entry is listed, and it takes no input,
+                                    // so taps reach the entry.
+                                    Item {
+                                        id: preview
+                                        width: entryBody.width
+                                        height: Math.round(120 * UIScale.value)
+                                        clip: true
+
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            radius: UIScale.radiusSm
+                                            color: Colors.bg
+                                        }
+
+                                        Loader {
+                                            id: previewLoader
+                                            active: menu._open && !entryChip._gone
+                                            enabled: false
+                                            sourceComponent: entryChip.modelData.component
+
+                                            readonly property real _natW: item ? Math.max(1, item.implicitWidth) : 1
+                                            readonly property real _natH: item ? Math.max(1, item.implicitHeight) : 1
+                                            readonly property real _inset: Math.round(UIScale.spacingSm)
+                                            readonly property real _fit: Math.min(1, (preview.width - previewLoader._inset * 2) / previewLoader._natW, (preview.height - previewLoader._inset * 2) / previewLoader._natH)
+
+                                            transformOrigin: Item.TopLeft
+                                            scale: previewLoader._fit
+                                            x: (preview.width - previewLoader._natW * previewLoader._fit) / 2
+                                            y: (preview.height - previewLoader._natH * previewLoader._fit) / 2
+                                        }
+                                    }
+
+                                    Row {
+                                        id: entryRow
+                                        width: entryBody.width
+                                        spacing: Math.round(UIScale.spacingSm)
+
+                                        Text {
+                                            id: entryStatus
+                                            text: "drag_indicator"
+                                            font.family: "Material Symbols Rounded"
+                                            font.pixelSize: UIScale.fontLead
+                                            color: Colors.textDim
+                                        }
+
+                                        Column {
+                                            width: entryRow.width - entryStatus.width - entryRow.spacing
+
+                                            Text {
+                                                width: parent.width
+                                                text: entryChip.modelData.label
+                                                elide: Text.ElideRight
+                                                color: Colors.text
+                                                font.pixelSize: UIScale.fontSmall
+                                            }
+
+                                            Text {
+                                                width: parent.width
+                                                visible: text !== ""
+                                                text: entryChip.modelData.description ?? ""
+                                                elide: Text.ElideRight
+                                                color: Colors.textDim
+                                                font.pixelSize: UIScale.fontTiny
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // The drag handler is declared before the tap, the same order the desktop
+                            // proxies use, and the tap gives way once the pointer moves past the threshold.
+                            // The press offset keeps the ghost under the same point of the widget the
+                            // pointer picked it up at.
+                            DragHandler {
+                                id: entryDrag
+                                target: null
+                                grabPermissions: PointerHandler.CanTakeOverFromAnything
+
+                                onActiveChanged: {
+                                    if (active) {
+                                        // The press point, mapped from the entry into the preview and then
+                                        // into desktop scale, so the ghost stays under the pointer as it was.
+                                        var pp = entryChip.mapToItem(preview, entryDrag.centroid.pressPosition.x, entryDrag.centroid.pressPosition.y);
+                                        var f = Math.max(0.01, previewLoader._fit);
+                                        var k = DesktopWidgetStore.scaleFor(root.width, root.height);
+                                        root._ghostGrabX = (pp.x - previewLoader.x) * k / f;
+                                        root._ghostGrabY = (pp.y - previewLoader.y) * k / f;
+                                        root._entryComponent = entryChip.modelData.component;
+                                        root._entryLabel = entryChip.modelData.label;
+                                        root._overMenu = false;
+                                        root._entryKey = entryChip.modelData.key;
+                                        root._dragItem = ghost;
+                                        root._moveEntryDrag(entryDrag.centroid.scenePosition);
+                                    } else {
+                                        root._finishEntryDrag();
+                                    }
+                                }
+
+                                onCentroidChanged: {
+                                    if (entryDrag.active)
+                                        root._moveEntryDrag(entryDrag.centroid.scenePosition);
+                                }
+                            }
+
+                            TapHandler {
+                                gesturePolicy: TapHandler.DragThreshold
+                                onTapped: DesktopWidgetStore.enableWidget(entryChip.modelData.key)
+                            }
+
+                            HoverHandler {
+                                cursorShape: Qt.OpenHandCursor
+                            }
+                        }
+                    }
+                }
+
+                // Sits on top of the cards for the wheel only. It accepts no buttons, so
+                // clicks and drags fall through to the entries.
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.NoButton
+                    onWheel: wheel => {
+                        var step = Math.round(40 * UIScale.value);
+                        var dy = wheel.angleDelta.y !== 0 ? wheel.angleDelta.y / 120 * step : wheel.pixelDelta.y;
+                        menu._scroll = Math.max(0, Math.min(menu._maxScroll, menu._scroll - dy));
+                    }
+                }
+            }
+        }
+    }
+
+    // Ghost of the entry being dragged out of the menu: the widget itself, live, at the
+    // same scale the desktop gives it. It only previews the drop, the widget is placed
+    // on release.
+    Item {
+        id: ghost
+
+        readonly property real _k: DesktopWidgetStore.scaleFor(root.width, root.height)
+
+        visible: root._entryKey !== ""
+        x: root._ghostX
+        y: root._ghostY
+        z: 100
+        width: ghostLoader.item ? Math.round(ghostLoader.item.implicitWidth * ghost._k) : 0
+        height: ghostLoader.item ? Math.round(ghostLoader.item.implicitHeight * ghost._k) : 0
+        opacity: root._overMenu ? 0.3 : 0.9
+
+        Loader {
+            id: ghostLoader
+            active: root._entryKey !== ""
+            enabled: false
+            sourceComponent: root._entryComponent
+            transformOrigin: Item.TopLeft
+            scale: ghost._k
         }
     }
 
@@ -2245,126 +2962,161 @@ PanelWindow {
         }
     }
 
-    // Controls, top right
-    Row {
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.margins: Math.round(UIScale.spacingLg)
-        spacing: Math.round(UIScale.spacingSm)
-
-        Repeater {
-            model: [
-                {
-                    key: "undo",
-                    label: "desktop.undo"
-                },
-                {
-                    key: "redo",
-                    label: "desktop.redo"
-                }
-            ]
-
-            delegate: Rectangle {
-                id: histBtn
-                required property var modelData
-                readonly property bool _enabled: modelData.key === "undo" ? DesktopWidgetStore.canUndo : DesktopWidgetStore.canRedo
-                implicitWidth: histLabel.implicitWidth + Math.round(UIScale.spacingMd * 2)
-                implicitHeight: histLabel.implicitHeight + Math.round(UIScale.spacingSm * 2)
-                radius: height / 2
-                opacity: _enabled ? 1 : 0.4
-                color: (histBtn._enabled && histHover.hovered) ? Colors.withAlpha(Colors.accent, 0.18) : Colors.surface
-
-                Behavior on color {
-                    ColorAnimation {
-                        duration: 100
-                    }
-                }
-
-                Text {
-                    id: histLabel
-                    anchors.centerIn: parent
-                    text: I18n.t(histBtn.modelData.label)
-                    color: (histBtn._enabled && histHover.hovered) ? Colors.accent : Colors.textDim
-                    font.pixelSize: UIScale.fontSmall
-                }
-
-                HoverHandler {
-                    id: histHover
-                }
-                TapHandler {
-                    enabled: histBtn._enabled
-                    onTapped: histBtn.modelData.key === "undo" ? DesktopWidgetStore.undo() : DesktopWidgetStore.redo()
-                }
-            }
+    // Controls, bottom centre. The editing tools share one toolbar and Done is the one primary action.
+    // The grip moves the whole bar, like the widget menu's header. Its position is a screen fraction
+    // stored under "widget-toolbar" (undoable and resolution-relative).
+    Item {
+        id: controls
+        readonly property real _gap: Math.round(UIScale.spacingSm)
+        readonly property var _stored: {
+            var _ = DesktopWidgetStore._positions;
+            return DesktopWidgetStore._positions["widget-toolbar"] ?? null;
         }
+        property bool moving: false
+        property real dragX: 0
+        property real dragY: 0
 
+        width: barRow.width
+        height: grip.height + controls._gap + barRow.height
+        x: controls.moving ? controls.dragX : root._clamp(controls._stored ? controls._stored.x * root.width : (root.width - controls.width) / 2, 0, Math.max(0, root.width - controls.width))
+        y: controls.moving ? controls.dragY : root._clamp(controls._stored ? controls._stored.y * root.height : root.height - controls.height - Math.round(UIScale.spacingLg), 0, Math.max(0, root.height - controls.height))
+
+        // Grip: drags the whole bar. Lights up on press, before any drag.
         Rectangle {
-            implicitWidth: snapLabel.implicitWidth + Math.round(UIScale.spacingMd * 2)
-            implicitHeight: snapLabel.implicitHeight + Math.round(UIScale.spacingSm * 2)
+            id: grip
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: Math.round(40 * UIScale.value)
+            height: Math.round(5 * UIScale.value)
             radius: height / 2
-            color: root.snapEnabled ? Colors.withAlpha(Colors.accent, 0.18) : Colors.surface
-            border.color: root.snapEnabled ? Colors.accent : "transparent"
-            border.width: 1
-
+            color: (barDrag.active || barPress.pressed) ? Colors.accent : Colors.textDim
             Behavior on color {
                 ColorAnimation {
                     duration: 100
                 }
             }
 
-            Text {
-                id: snapLabel
-                anchors.centerIn: parent
-                text: I18n.t("desktop.snap")
-                color: root.snapEnabled ? Colors.accent : Colors.textDim
-                font.pixelSize: UIScale.fontSmall
+            HoverHandler {
+                cursorShape: barDrag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+            }
+            DragHandler {
+                id: barDrag
+                target: null
+                grabPermissions: PointerHandler.CanTakeOverFromAnything
 
-                Behavior on color {
-                    ColorAnimation {
-                        duration: 100
+                property point _startScene: Qt.point(0, 0)
+                property point _startPos: Qt.point(0, 0)
+
+                onActiveChanged: {
+                    if (active) {
+                        barDrag._startScene = barDrag.centroid.scenePosition;
+                        barDrag._startPos = Qt.point(controls.x, controls.y);
+                        controls.dragX = controls.x;
+                        controls.dragY = controls.y;
+                        controls.moving = true;
+                    } else {
+                        controls.moving = false;
+                        var fx = root._clamp(controls.dragX, 0, Math.max(0, root.width - controls.width)) / Math.max(1, root.width);
+                        var fy = root._clamp(controls.dragY, 0, Math.max(0, root.height - controls.height)) / Math.max(1, root.height);
+                        DesktopWidgetStore.setPos("widget-toolbar", fx, fy);
                     }
                 }
+                onCentroidChanged: {
+                    if (!barDrag.active)
+                        return;
+                    var dx = barDrag.centroid.scenePosition.x - barDrag._startScene.x;
+                    var dy = barDrag.centroid.scenePosition.y - barDrag._startScene.y;
+                    controls.dragX = root._clamp(barDrag._startPos.x + dx, 0, Math.max(0, root.width - controls.width));
+                    controls.dragY = root._clamp(barDrag._startPos.y + dy, 0, Math.max(0, root.height - controls.height));
+                }
             }
-
-            HoverHandler {}
             TapHandler {
-                onTapped: root.snapEnabled = !root.snapEnabled
+                id: barPress
             }
         }
 
-        Rectangle {
-            implicitWidth: doneLabel.implicitWidth + Math.round(UIScale.spacingMd * 2)
-            implicitHeight: doneLabel.implicitHeight + Math.round(UIScale.spacingSm * 2)
-            radius: height / 2
-            color: doneHover.hovered ? Colors.accent : Colors.surface
+        Item {
+            id: barRow
+            y: grip.height + controls._gap
+            width: toolbar.width + controls._gap + doneButton.width
+            height: Math.max(toolbar.height, doneButton.height)
 
-            Behavior on color {
-                ColorAnimation {
-                    duration: 120
-                }
+            DesktopToolButton {
+                id: doneButton
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                icon: "check"
+                label: I18n.t("desktop.done")
+                primary: true
+                onActivated: DesktopWidgetStore.configMode = false
             }
 
-            Text {
-                id: doneLabel
-                anchors.centerIn: parent
-                text: I18n.t("desktop.done")
-                color: doneHover.hovered ? Colors.bg : Colors.text
-                font.pixelSize: UIScale.fontSmall
-                font.weight: Font.Medium
+            Rectangle {
+                id: toolbar
+                anchors.right: doneButton.left
+                anchors.rightMargin: controls._gap
+                anchors.verticalCenter: parent.verticalCenter
+                readonly property real _pad: Math.round(UIScale.spacingXs)
+                width: toolRow.implicitWidth + _pad * 2
+                height: toolRow.implicitHeight + _pad * 2
+                radius: height / 2
+                color: Colors.surface
+                border.width: 1
+                border.color: Colors.withAlpha(Colors.text, 0.08)
 
-                Behavior on color {
-                    ColorAnimation {
-                        duration: 120
+                Row {
+                    id: toolRow
+                    anchors.centerIn: parent
+                    spacing: Math.round(UIScale.spacingXs / 2)
+
+                    DesktopToolButton {
+                        icon: "undo"
+                        label: I18n.t("desktop.undo")
+                        enabled: DesktopWidgetStore.canUndo
+                        onActivated: DesktopWidgetStore.undo()
+                    }
+                    DesktopToolButton {
+                        icon: "redo"
+                        label: I18n.t("desktop.redo")
+                        enabled: DesktopWidgetStore.canRedo
+                        onActivated: DesktopWidgetStore.redo()
+                    }
+
+                    // Divider, centred in a tool-button-high slot (a Row ignores anchors on its children).
+                    Item {
+                        width: 1
+                        height: Math.round(36 * UIScale.value)
+
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 1
+                            height: Math.round(18 * UIScale.value)
+                            color: Colors.withAlpha(Colors.text, 0.15)
+                        }
+                    }
+
+                    DesktopToolButton {
+                        icon: "grid_on"
+                        label: I18n.t("desktop.snap")
+                        toggled: root.snapEnabled
+                        onActivated: DesktopGridSettings.setSnapEnabled(!DesktopGridSettings.snapEnabled)
+                    }
+                    DesktopToolButton {
+                        compact: true
+                        icon: "expand_more"
+                        toggled: root.snapMenuOpen
+                        onActivated: root.snapMenuOpen = !root.snapMenuOpen
                     }
                 }
             }
+        }
 
-            HoverHandler {
-                id: doneHover
-            }
-            TapHandler {
-                onTapped: DesktopWidgetStore.configMode = false
-            }
+        // Opens above the bar when the bar is in the lower half of the screen, below otherwise.
+        DesktopGridPanel {
+            x: barRow.x + toolbar.x + toolbar.width - width
+            y: controls.y > root.height / 2 ? -height - controls._gap : controls.height + controls._gap
+            open: root.snapMenuOpen
+            screenW: root.width
+            screenH: root.height
         }
     }
 }

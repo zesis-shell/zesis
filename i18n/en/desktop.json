@@ -66,5 +66,18 @@
   "snap": "Snap",
   "undo": "Undo",
   "redo": "Redo",
-  "done": "Done"
+  "done": "Done",
+  "gridStyle": "Style",
+  "gridStyleDots": "Dots",
+  "gridStyleLines": "Lines",
+  "gridStyleBoth": "Both",
+  "gridOpacity": "Opacity",
+  "gridSpacing": "Spacing",
+  "gridPresetFine": "Fine",
+  "gridPresetMedium": "Medium",
+  "gridPresetCoarse": "Coarse",
+  "gridPresetManual": "Manual",
+  "gridStyleNone": "None",
+  "gridColumns": "Columns",
+  "gridRows": "Rows"
 }
